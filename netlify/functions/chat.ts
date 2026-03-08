@@ -1,4 +1,4 @@
-import { stream } from "@netlify/functions";
+import type { Handler } from "@netlify/functions";
 import Anthropic from "@anthropic-ai/sdk";
 import { SYSTEM_PROMPT } from "./lib/system-prompt";
 
@@ -9,47 +9,33 @@ interface Message {
   content: string;
 }
 
-export default stream(async (event) => {
+export const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") {
-    return new Response("Method Not Allowed", { status: 405 });
+    return { statusCode: 405, body: "Method Not Allowed" };
   }
 
   let messages: Message[];
   try {
     ({ messages } = JSON.parse(event.body ?? "{}") as { messages: Message[] });
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid request body" }), { status: 400 });
+    return { statusCode: 400, body: JSON.stringify({ error: "Invalid request body" }) };
   }
 
-  const claudeStream = await anthropic.messages.stream({
+  const response = await anthropic.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 1024,
     system: SYSTEM_PROMPT,
     messages,
   });
 
-  const encoder = new TextEncoder();
-  const readable = new ReadableStream({
-    async start(controller) {
-      try {
-        for await (const chunk of claudeStream) {
-          if (
-            chunk.type === "content_block_delta" &&
-            chunk.delta.type === "text_delta"
-          ) {
-            controller.enqueue(encoder.encode(chunk.delta.text));
-          }
-        }
-      } finally {
-        controller.close();
-      }
-    },
-  });
+  const text = response.content
+    .filter((block) => block.type === "text")
+    .map((block) => block.text)
+    .join("");
 
-  return new Response(readable, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "no-cache",
-    },
-  });
-});
+  return {
+    statusCode: 200,
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+    body: text,
+  };
+};

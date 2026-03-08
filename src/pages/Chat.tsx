@@ -60,50 +60,33 @@ export default function Chat() {
         body: JSON.stringify({ messages: msgs }),
       });
 
-      if (!res.ok || !res.body) {
+      if (!res.ok) {
         setMessages((prev) => {
           const next = [...prev];
-          next[next.length - 1] = { role: "assistant", content: "Sorry, something went wrong. Please refresh and try again." };
+          next[next.length - 1] = { role: "assistant", content: "Sorry, something went wrong. Please try again." };
           return next;
         });
         return;
       }
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let full = "";
+      const full = await res.text();
 
-      while (true) {
-        const { done: readerDone, value } = await reader.read();
-        if (readerDone) break;
-        const chunk = decoder.decode(value, { stream: true });
-        full += chunk;
-
-        setMessages((prev) => {
-          const next = [...prev];
-          next[next.length - 1] = {
-            role: "assistant",
-            content: stripScopingTag(full),
-          };
-          return next;
-        });
-      }
+      setMessages((prev) => {
+        const next = [...prev];
+        next[next.length - 1] = { role: "assistant", content: stripScopingTag(full) };
+        return next;
+      });
 
       // Check for completion payload
       const match = SCOPING_COMPLETE_RE.exec(full);
       if (match) {
         const payload = JSON.parse(match[1].trim()) as object;
         setDone(true);
-        // Save session
         const finalMessages: Message[] = [...msgs, { role: "assistant", content: stripScopingTag(full) }];
         const completeRes = await fetch("/.netlify/functions/complete-chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            leadId: lead?.leadId,
-            transcript: finalMessages,
-            payload,
-          }),
+          body: JSON.stringify({ leadId: lead?.leadId, transcript: finalMessages, payload }),
         });
         const { proposalSlug } = await completeRes.json() as { proposalSlug: string };
         sessionStorage.setItem("hv_proposal_slug", proposalSlug);
