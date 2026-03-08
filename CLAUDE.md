@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## URLs
+
+- **Scoping app:** https://workivascoping.harborview-consulting.com
+- **Proposal system:** https://proposal.harborview-consulting.com
+
 ## Purpose
 
 Workiva Scoping Agent — a web app that qualifies Workiva implementation prospects, produces a draft fee range via AI chat, generates a proposal, and routes the opportunity into a human review flow.
