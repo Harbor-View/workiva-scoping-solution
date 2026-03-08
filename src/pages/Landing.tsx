@@ -106,7 +106,7 @@ export default function Landing() {
           {/* Trust line */}
           <p className="text-center text-xs text-hv-slate mt-6">
             Already working with Harbor View?{" "}
-            <a href="mailto:mmolloy@harborview-consulting.com" className="text-hv-blue hover:underline">
+            <a href="https://www.harborview-consulting.com/contact" className="text-hv-blue hover:underline">
               Contact us directly
             </a>
           </p>
