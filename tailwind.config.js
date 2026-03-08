@@ -5,10 +5,18 @@ export default {
     extend: {
       colors: {
         hv: {
-          navy: "#1B2B4B",
-          gold: "#C9A84C",
-          slate: "#4A5568",
+          navy: "#002A4E",
+          blue: "#079FE0",
+          slate: "#686B70",
+          yellow: "#FFC857",
+          mint: "#3AB795",
+          coral: "#FF6F61",
+          white: "#F8F9FA",
+          border: "#D1D3D4",
         },
+      },
+      fontFamily: {
+        sans: ["Lato", "sans-serif"],
       },
     },
   },
