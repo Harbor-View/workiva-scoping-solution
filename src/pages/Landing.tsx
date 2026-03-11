@@ -29,7 +29,7 @@ const SERVICES = [
   {
     title: "Management Reporting",
     description: "Create dynamic management reports with real-time data integration across your organization.",
-    href: "https://www.harborview-consulting.com/services/workiva/management-reporting",
+    href: "https://www.harborview-consulting.com/services/workiva/management-reporting-quick-start",
   },
   {
     title: "Connectivity (Wdata)",
@@ -39,7 +39,7 @@ const SERVICES = [
   {
     title: "SOX / Internal Controls",
     description: "Governance, Risk, and Compliance management — structured around Workiva's GRC framework.",
-    href: "https://www.harborview-consulting.com/services/workiva/grc",
+    href: "https://www.harborview-consulting.com/services/workiva/audit-management-quick-start",
   },
   {
     title: "ESG Reporting",
