@@ -15,33 +15,36 @@ import {
   MessageSquare,
   FileText,
   Send,
+  Phone,
+  Mail,
+  MapPin,
 } from "lucide-react";
 
 const SERVICES = [
   {
     title: "Financial Reporting",
     description: "Streamline your financial reporting process with automated workflows, linked data, and audit-ready controls.",
-    available: true,
+    href: "https://www.harborview-consulting.com/services/workiva/financial-reporting",
   },
   {
     title: "Management Reporting",
     description: "Create dynamic management reports with real-time data integration across your organization.",
-    available: true,
+    href: "https://www.harborview-consulting.com/services/workiva/management-reporting",
   },
   {
     title: "Connectivity (Wdata)",
     description: "Seamless data integration and transformation using Workiva's Wdata platform.",
-    available: true,
+    href: "https://www.harborview-consulting.com/services/workiva/wdata",
   },
   {
     title: "SOX / Internal Controls",
     description: "Governance, Risk, and Compliance management — structured around Workiva's GRC framework.",
-    available: true,
+    href: "https://www.harborview-consulting.com/services/workiva/grc",
   },
   {
     title: "ESG Reporting",
     description: "Environmental, Social, and Governance reporting built on Workiva's purpose-built ESG platform.",
-    available: true,
+    href: "https://www.harborview-consulting.com/services/workiva/esg",
   },
 ];
 
@@ -168,7 +171,7 @@ export default function Landing() {
       {/* Nav */}
       <nav className="absolute top-0 left-0 right-0 z-20 px-6 py-5">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <span className="text-white font-bold text-lg tracking-wide">Harbor View Consulting</span>
+          <img src="/hvc-logo.png" alt="Harbor View Consulting" className="h-12 w-auto" />
           <a
             href="https://www.harborview-consulting.com"
             className="text-white/70 hover:text-white text-sm transition"
@@ -243,23 +246,35 @@ export default function Landing() {
       <section className="bg-hv-white py-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold text-hv-navy mb-3">Implementation services</h2>
+            <h2 className="text-3xl font-bold text-hv-navy mb-3">Workiva Services</h2>
             <p className="text-hv-slate max-w-xl mx-auto">
-              We scope and deliver across the full Workiva platform. Click any service to start your estimate.
+              We scope and deliver across the full Workiva platform. Learn more about each service or start your estimate below.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {SERVICES.map((service) => (
-              <button
-                key={service.title}
-                onClick={scrollToCTA}
-                className="text-left p-6 rounded-2xl bg-white border border-hv-border hover:border-hv-blue hover:shadow-md transition-all duration-200 group"
-              >
+              <div key={service.title} className="p-6 rounded-2xl bg-white border border-hv-border hover:border-hv-blue hover:shadow-md transition-all duration-200 group flex flex-col">
                 <CheckCircle className="w-8 h-8 text-hv-blue mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-lg font-bold text-hv-navy mb-2">{service.title}</h3>
-                <p className="text-hv-slate text-sm leading-relaxed">{service.description}</p>
-              </button>
+                <p className="text-hv-slate text-sm leading-relaxed mb-4 flex-1">{service.description}</p>
+                <a
+                  href={service.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-hv-blue text-sm font-semibold hover:underline flex items-center gap-1"
+                >
+                  Learn more <ArrowRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
             ))}
+          </div>
+          <div className="text-center mt-10">
+            <button
+              onClick={scrollToCTA}
+              className="inline-flex items-center gap-2 bg-hv-blue hover:bg-hv-blue/90 text-white font-semibold px-6 py-3 rounded-xl transition shadow-sm"
+            >
+              Get an estimate for any service <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </section>
@@ -357,11 +372,50 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-hv-navy py-8 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-white/40 text-sm">
-          <span>© {new Date().getFullYear()} Harbor View Consulting. All rights reserved.</span>
-          <div className="flex gap-6">
-            <a href="https://www.harborview-consulting.com" className="hover:text-white/70 transition">harborview-consulting.com</a>
+      <footer className="bg-hv-navy text-white py-12 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col items-center mb-8">
+            <img src="/hvc-logo.png" alt="Harbor View Consulting" className="h-12 mb-4" />
+          </div>
+          <div className="grid md:grid-cols-2 gap-8 mb-10">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
+              <div className="space-y-3 text-white/80 text-sm">
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 shrink-0" />
+                  <span>443-909-2700</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 shrink-0" />
+                  <span>workiva@harborview-consulting.com</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>400 East Pratt Street<br />Baltimore, MD 21202</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col items-center justify-center">
+              <h3 className="text-lg font-semibold mb-4">Learn More About Us</h3>
+              <a
+                href="https://www.harborview-consulting.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white text-hv-navy font-semibold px-6 py-2.5 rounded-lg hover:bg-white/90 transition text-sm"
+              >
+                Visit Our Website
+              </a>
+            </div>
+          </div>
+          <div className="border-t border-white/20 pt-8 text-center text-sm text-white/60 space-y-3">
+            <div className="flex items-center justify-center gap-4">
+              <span>© {new Date().getFullYear()} Harbor View Consulting. All rights reserved.</span>
+              <span className="text-white/30">•</span>
+              <a href="https://www.harborview-consulting.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">Privacy Policy</a>
+            </div>
+            <p className="text-white/50 text-xs max-w-2xl mx-auto">
+              This site is owned and maintained by Harbor View Consulting, a registered Workiva implementation partner. This site is not affiliated with or endorsed by Workiva Inc.
+            </p>
           </div>
         </div>
       </footer>
