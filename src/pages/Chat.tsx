@@ -133,6 +133,29 @@ export default function Chat() {
         </div>
       </header>
 
+      {/* Immediate Help CTA */}
+      <div className="bg-hv-navy/5 border-b border-hv-border px-4 py-3">
+        <div className="max-w-2xl mx-auto flex items-center gap-4">
+          <span className="text-xs font-semibold text-hv-navy whitespace-nowrap">Need immediate help?</span>
+          <div className="flex items-center gap-4">
+            <a href="mailto:mmolloy@harborview-consulting.com" className="flex items-center gap-2 group">
+              <img src="/team-mike-molloy.png" alt="Mike Molloy" className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm" />
+              <div className="leading-tight">
+                <span className="text-xs font-medium text-hv-navy group-hover:text-hv-blue transition">Mike Molloy</span>
+                <span className="block text-[11px] text-hv-slate group-hover:text-hv-blue transition">mmolloy@harborview-consulting.com</span>
+              </div>
+            </a>
+            <a href="mailto:kcollingsworth@harborview-consulting.com" className="flex items-center gap-2 group">
+              <img src="/team-kevin-collingsworth.png" alt="Kevin Collingsworth" className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm" />
+              <div className="leading-tight">
+                <span className="text-xs font-medium text-hv-navy group-hover:text-hv-blue transition">Kevin Collingsworth</span>
+                <span className="block text-[11px] text-hv-slate group-hover:text-hv-blue transition">kcollingsworth@harborview-consulting.com</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
       {/* Messages */}
       <main className="flex-1 overflow-y-auto px-4 py-6">
         <div className="max-w-2xl mx-auto space-y-4">
