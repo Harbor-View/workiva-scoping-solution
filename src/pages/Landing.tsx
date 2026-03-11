@@ -50,8 +50,8 @@ const SERVICES: { title: string; description: string; icon: LucideIcon; accent: 
     accent: "from-hv-yellow to-[#d4a03c]",
   },
   {
-    title: "ESG Reporting",
-    description: "Environmental, Social, and Governance reporting built on Workiva's purpose-built ESG platform.",
+    title: "Sustainability",
+    description: "Environmental, Social, and Governance reporting built on Workiva's purpose-built sustainability platform.",
     icon: Leaf,
     accent: "from-hv-mint to-[#2a9474]",
   },
