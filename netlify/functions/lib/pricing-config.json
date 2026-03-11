@@ -32,5 +32,109 @@
     }
   ],
   "bundleRule": "Add 80% of each additional service's base range",
-  "complexityDrivers": "number of entities, custom integrations, data volume, tight deadlines, limited internal resources, regulatory complexity"
+  "complexityDrivers": "number of entities, custom integrations, data volume, tight deadlines, limited internal resources, regulatory complexity",
+  "adjustments": {
+    "informationConfidence": {
+      "description": "Controls range width based on how much detail the prospect provided",
+      "levels": [
+        {
+          "level": "high",
+          "signal": "Prospect gave detailed answers on scope, timeline, team, data sources",
+          "effect": "Narrow the range — use 30% width around tier midpoint"
+        },
+        {
+          "level": "medium",
+          "signal": "Prospect was vague on several key dimensions (team size, data sources, timeline)",
+          "effect": "Moderate range — use 50% width around tier midpoint"
+        },
+        {
+          "level": "low",
+          "signal": "Prospect couldn't answer basic questions (entity count, ERP, team composition)",
+          "effect": "Wide range — use 75%+ width around tier midpoint, spanning into adjacent tier if needed. Note in complexity_notes that range is wider due to limited scoping detail"
+        }
+      ]
+    },
+    "organizationSize": {
+      "description": "Pushes tier selection based on company size and structure",
+      "rules": [
+        { "signal": "Employees < 500", "effect": "Lean toward simple tier" },
+        { "signal": "Employees 500–5,000", "effect": "Moderate tier baseline" },
+        { "signal": "Employees 5,000+ or Fortune 1000", "effect": "Complex tier baseline" },
+        { "signal": "1–3 entities", "effect": "No adjustment" },
+        { "signal": "4–10 entities", "effect": "+1 tier or push to upper half of current tier" },
+        { "signal": "10+ entities or multi-country", "effect": "Complex tier, upper range" },
+        { "signal": "Public company (SEC filer)", "effect": "+15–25% for regulatory overhead (XBRL, SOX, audit trail)" },
+        { "signal": "Multi-currency", "effect": "+10–20%" }
+      ]
+    },
+    "currentStateMigration": {
+      "description": "Adjusts based on where the customer is coming from",
+      "rules": [
+        { "signal": "Net-new to Workiva — greenfield", "effect": "Moderate baseline (clean slate but full build)" },
+        { "signal": "Migrating from Excel/manual processes", "effect": "+10–15% (data cleanup, change management)" },
+        { "signal": "Migrating from competing platform (BlackLine, Trintech, OneStream)", "effect": "+15–25% (data migration, retraining, parallel run)" },
+        { "signal": "Expanding existing Workiva — adding a module", "effect": "-10–15% (existing platform knowledge, integrations partially done)" },
+        { "signal": "Existing Workiva but poorly implemented (Health Check finding)", "effect": "+10–20% (remediation before new build)" }
+      ]
+    },
+    "integrationComplexity": {
+      "description": "Pushes estimate up based on data and integration needs",
+      "rules": [
+        { "signal": "Single ERP, standard connectors (SAP, Oracle, NetSuite with Workiva connector)", "effect": "No adjustment" },
+        { "signal": "Multiple ERPs or data sources", "effect": "+15–25%" },
+        { "signal": "Custom integrations required (APIs, flat files, middleware)", "effect": "+20–30%" },
+        { "signal": "Real-time or near-real-time data needs", "effect": "+15–20%" },
+        { "signal": "Data quality issues acknowledged", "effect": "+10–20% (cleansing & validation layer)" }
+      ]
+    },
+    "internalResources": {
+      "description": "Adjusts based on customer team readiness and availability",
+      "rules": [
+        { "signal": "Dedicated project team with Workiva experience", "effect": "-10–15% (less HVC hands-on time)" },
+        { "signal": "Dedicated project team but no Workiva experience", "effect": "No adjustment (training offsets efficiency)" },
+        { "signal": "No dedicated project team — shared resources", "effect": "+10–15% (more coordination overhead, slower decisions)" },
+        { "signal": "No IT support available for integrations", "effect": "+15–20% (HVC handles technical work)" },
+        { "signal": "Strong executive sponsor actively engaged", "effect": "-5% (faster decisions, fewer blockers)" },
+        { "signal": "No executive sponsor", "effect": "+10% (decision delays, scope creep risk)" }
+      ]
+    },
+    "timelinePressure": {
+      "description": "Adjusts for schedule compression and urgency",
+      "rules": [
+        { "signal": "Comfortable timeline (6+ months, no hard deadline)", "effect": "No adjustment" },
+        { "signal": "Moderate deadline (filing date in 3–6 months)", "effect": "+5–10% (compressed schedule, possible parallel workstreams)" },
+        { "signal": "Aggressive deadline (<3 months, hard regulatory date)", "effect": "+15–25% (overtime, additional resources, risk premium)" },
+        { "signal": "\"As soon as possible\" with no specific deadline", "effect": "Widen range (ambiguity about true urgency)" }
+      ]
+    },
+    "regulatoryCompliance": {
+      "description": "Pushes estimate up for regulatory and compliance requirements",
+      "rules": [
+        { "signal": "Standard reporting (internal management reports, board decks)", "effect": "No adjustment" },
+        { "signal": "SEC filing (10-K, 10-Q, proxy, S-1)", "effect": "+15–20% (XBRL, audit trail, review cycles)" },
+        { "signal": "First-time filer / IPO", "effect": "+20–30% (process design from scratch, heightened scrutiny)" },
+        { "signal": "CSRD / EU sustainability mandates", "effect": "+15–20% (evolving standards, assurance requirements)" },
+        { "signal": "SOX 404(b) (accelerated filer)", "effect": "+10–15% over 404(a) baseline" },
+        { "signal": "Multi-jurisdictional regulatory", "effect": "+15–25% (different frameworks, reporting calendars)" }
+      ]
+    },
+    "scopeVolume": {
+      "description": "Drives tier selection based on volume of deliverables",
+      "rules": [
+        { "signal": "1–3 reports/documents", "effect": "Simple tier" },
+        { "signal": "4–10 reports/documents", "effect": "Moderate tier" },
+        { "signal": "10+ reports/documents", "effect": "Complex tier" },
+        { "signal": "1–50 SOX controls", "effect": "Simple tier" },
+        { "signal": "50–200 SOX controls", "effect": "Moderate tier" },
+        { "signal": "200+ SOX controls", "effect": "Complex tier" },
+        { "signal": "1–3 facilities (ESG)", "effect": "Simple tier" },
+        { "signal": "4–10 facilities (ESG)", "effect": "Moderate tier" },
+        { "signal": "10+ facilities or multi-country (ESG)", "effect": "Complex tier" }
+      ]
+    },
+    "adjustmentCaps": {
+      "maxUpward": "+60% from tier midpoint",
+      "maxDownward": "-25% from tier midpoint"
+    }
+  }
 }

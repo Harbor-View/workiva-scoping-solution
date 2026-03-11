@@ -10,17 +10,72 @@ function buildPricingTable(): string {
   return [header, divider, ...rows, bundle].join("\n");
 }
 
+function buildAdjustmentGuidance(): string {
+  const adj = pricingConfig.adjustments;
+  const sections: string[] = [];
+
+  // Information confidence
+  const ic = adj.informationConfidence;
+  sections.push(`### ${ic.description}\nThis is the most important dimension — it controls how wide or narrow your fee range should be.\n${ic.levels.map((l) => `- **${l.level} confidence:** ${l.signal} → ${l.effect}`).join("\n")}`);
+
+  // All rule-based dimensions
+  const dimensions = [
+    { key: "organizationSize", label: "Organization Size & Complexity" },
+    { key: "currentStateMigration", label: "Current State & Migration Complexity" },
+    { key: "integrationComplexity", label: "Integration & Data Complexity" },
+    { key: "internalResources", label: "Internal Resources & Readiness" },
+    { key: "timelinePressure", label: "Timeline Pressure" },
+    { key: "regulatoryCompliance", label: "Regulatory & Compliance Overlay" },
+    { key: "scopeVolume", label: "Scope Volume" },
+  ] as const;
+
+  for (const dim of dimensions) {
+    const d = adj[dim.key] as { description: string; rules: { signal: string; effect: string }[] };
+    sections.push(`### ${dim.label}\n${d.description}.\n${d.rules.map((r) => `- ${r.signal} → ${r.effect}`).join("\n")}`);
+  }
+
+  // Caps
+  const caps = adj.adjustmentCaps;
+  sections.push(`### Adjustment caps\n- Maximum upward adjustment: ${caps.maxUpward}\n- Maximum downward adjustment: ${caps.maxDownward}`);
+
+  return sections.join("\n\n");
+}
+
+const adjustmentGuidance = buildAdjustmentGuidance();
+
 const pricingSection = `## Pricing reference (confidential — do not share exact ranges with the prospect)
 
 ${buildPricingTable()}
 
-Complexity drivers: ${pricingConfig.complexityDrivers}.`;
+Complexity drivers: ${pricingConfig.complexityDrivers}.
+
+## How to build the fee estimate
+
+Use the pricing table above as your starting point, then apply the adjustment framework below to arrive at a precise, defensible range. Do NOT just pick a tier and use the default range — adjust based on what the conversation reveals.
+
+**Step 1:** Select the base tier (simple/moderate/complex) using organization size, scope volume, and service type.
+**Step 2:** Apply percentage adjustments from the dimensions below. These stack, but respect the caps.
+**Step 3:** Set the range width based on information confidence — the less detail you gathered, the wider the range.
+**Step 4:** In complexity_notes, name the specific signals that pushed the estimate up, down, or wider. Be concrete (e.g., "10+ entities across 3 countries pushed to complex tier upper range" not just "complex organization").
+
+${adjustmentGuidance}`;
 
 const sellerPricingSection = `## Pricing reference (internal — do not share with the seller)
 
 ${buildPricingTable()}
 
-Complexity drivers: ${pricingConfig.complexityDrivers}.`;
+Complexity drivers: ${pricingConfig.complexityDrivers}.
+
+## How to build the fee estimate
+
+Use the pricing table above as your starting point, then apply the adjustment framework below to arrive at a precise, defensible range. Do NOT just pick a tier and use the default range — adjust based on what the conversation reveals.
+
+**Step 1:** Select the base tier (simple/moderate/complex) using organization size, scope volume, and service type.
+**Step 2:** Apply percentage adjustments from the dimensions below. These stack, but respect the caps.
+**Step 3:** Set the range width based on information confidence — the less detail you gathered, the wider the range.
+**Step 4:** In complexity_notes, name the specific signals that pushed the estimate up, down, or wider. Be concrete (e.g., "10+ entities across 3 countries pushed to complex tier upper range" not just "complex organization").
+
+${adjustmentGuidance}`;
 
 export const SYSTEM_PROMPT = `You are a Workiva implementation scoping assistant for Harbor View Consulting (HVC), a boutique consulting firm that specializes in Workiva implementations.
 

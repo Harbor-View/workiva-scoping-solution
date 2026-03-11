@@ -33,7 +33,8 @@ Workiva Scoping Solution for Harbor View Consulting — an AI-powered chat that 
 - `auth.ts` — `validateSession()` extracts Bearer token, validates against `session_tokens` table
 - `rate-limit.ts` — Supabase-backed sliding-window rate limiting
 - `html-escape.ts` — `esc()`, `escUrl()`, `sanitizeSubject()` for email template safety
-- `system-prompt.ts` — `SYSTEM_PROMPT` and `WORKIVA_SELLER_SYSTEM_PROMPT`
+- `system-prompt.ts` — `SYSTEM_PROMPT` and `WORKIVA_SELLER_SYSTEM_PROMPT` with structured pricing adjustment framework
+- `pricing-config.json` — Editable fee ranges, bundle rules, and adjustment dimensions (org size, migration complexity, integrations, resources, timeline, regulatory, scope volume, confidence-based range width)
 - `research-company.ts` — Claude-powered company research with Supabase cache
 
 **Key libraries:** `@anthropic-ai/sdk` (Claude), `@supabase/supabase-js`, `@aws-sdk/client-ses`, `pdfkit`, `react-markdown` + `remark-gfm`.
@@ -45,6 +46,7 @@ Workiva Scoping Solution for Harbor View Consulting — an AI-powered chat that 
 - **Session token auth:** All protected endpoints require `Authorization: Bearer <token>`. Tokens issued by `verify-otp`, stored in Supabase `session_tokens` (2-hour expiry). Frontend stores token in sessionStorage as part of `hv_lead`.
 - **Dual experience:** `@workiva.com` emails get `WORKIVA_SELLER_SYSTEM_PROMPT`; all others get `SYSTEM_PROMPT`. Detection server-side from validated session email.
 - **Session storage keys:** `hv_lead` (leadId + email + sessionToken), `hv_admin` + `hv_admin_token` (admin auth).
+- **Pricing adjustment framework:** `pricing-config.json` contains both the static fee table and structured adjustment rules across 8 dimensions (information confidence, org size, migration state, integrations, internal resources, timeline, regulatory, scope volume). `buildAdjustmentGuidance()` in `system-prompt.ts` renders these into the system prompt so Claude applies percentage adjustments and widens/narrows ranges based on conversation signals. Adjustment caps: +60% max up, -25% max down from tier midpoint.
 - **Company research cache:** `company_research` Supabase table keyed by normalized company name. Avoids redundant Claude API calls for previously researched companies.
 - **HV notification email:** Comma-separated `HV_NOTIFICATION_EMAIL` env var supports multiple recipients. Email includes company research, scoping summary with service pills, and full chat transcript.
 - **Email blocking:** `src/lib/blocked-domains.ts` blocks competitors, free email providers, etc. `workiva.com` is intentionally NOT blocked.
