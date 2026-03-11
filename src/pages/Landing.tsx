@@ -50,6 +50,12 @@ const SERVICES: { title: string; description: string; icon: LucideIcon; accent: 
     accent: "from-hv-yellow to-[#d4a03c]",
   },
   {
+    title: "Audit Management",
+    description: "Centralize audit planning, execution, and reporting with Workiva's integrated audit management solution.",
+    icon: FileCheck,
+    accent: "from-hv-coral to-[#d4503f]",
+  },
+  {
     title: "Sustainability",
     description: "Environmental, Social, and Governance reporting built on Workiva's purpose-built sustainability platform.",
     icon: Leaf,
