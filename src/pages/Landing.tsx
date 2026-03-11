@@ -156,10 +156,6 @@ function EmailForm({ size = "default" }: { size?: "default" | "large" }) {
 export default function Landing() {
   const ctaRef = useRef<HTMLDivElement>(null);
 
-  function scrollToCTA() {
-    ctaRef.current?.scrollIntoView({ behavior: "smooth" });
-  }
-
   return (
     <div className="min-h-screen bg-hv-white font-sans">
 
