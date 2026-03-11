@@ -94,7 +94,7 @@ export const handler: Handler = async (event) => {
   // Research company (non-blocking — don't fail the whole flow)
   let research: CompanyResearch | null = null;
   try {
-    research = await researchCompany(payload.company_name, payload.industry);
+    research = await researchCompany(payload.company_name, payload.industry, supabase);
   } catch (err) {
     console.error("Company research error (non-fatal):", err);
   }
@@ -104,10 +104,12 @@ export const handler: Handler = async (event) => {
     companyName: esc(payload.company_name),
     industry: esc(payload.industry),
     feeRange: esc(payload.fee_range),
-    services: esc(payload.services.join(", ")),
+    services: payload.services.map((s) => esc(s)),
+    servicesJoined: esc(payload.services.join(", ")),
     duration: esc(payload.project_duration),
     complexity: esc(payload.complexity_tier),
     notes: esc(payload.complexity_notes),
+    modules: payload.modules.map((m) => esc(m)),
     email: esc(lead?.email ?? "unknown"),
   };
 
@@ -181,14 +183,41 @@ export const handler: Handler = async (event) => {
 
   <div class="fee">${e.feeRange}</div>
 
-  <div class="row"><span class="label">Services</span><span class="value">${e.services}</span></div>
+  <div class="row"><span class="label">Services</span><span class="value">${e.servicesJoined}</span></div>
   <div class="row"><span class="label">Duration</span><span class="value">${e.duration}</span></div>
   <div class="row"><span class="label">Complexity</span><span class="value" style="text-transform: capitalize;">${e.complexity}</span></div>
   <div class="row"><span class="label">Prospect email</span><span class="value">${e.email}</span></div>
+  ${e.modules.length > 0 ? `<div class="row"><span class="label">Modules</span><span class="value">${e.modules.join(", ")}</span></div>` : ""}
 
-  <div class="notes" style="margin-top: 24px;">
-    <strong style="color:#002A4E; display:block; margin-bottom:6px;">Rationale</strong>
-    ${e.notes}
+  <!-- Scoping Summary -->
+  <div style="margin-top: 24px; background: #F8F9FA; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+    <strong style="color:#002A4E; display:block; margin-bottom:12px; font-size: 14px;">Scoping Summary</strong>
+    <p style="color:#686B70; font-size:13px; line-height:1.6; margin:0 0 16px;">${e.notes}</p>
+
+    <table cellpadding="0" cellspacing="0" border="0" style="width:100%; font-size:12px;">
+      <tr>
+        <td style="padding:6px 12px 6px 0; color:#686B70; vertical-align:top; white-space:nowrap;"><strong>Services:</strong></td>
+        <td style="padding:6px 0; color:#002A4E;">
+          ${e.services.map((s) => `<span style="display:inline-block; background:#079FE0; color:white; border-radius:100px; padding:2px 10px; font-size:11px; font-weight:600; margin:2px 4px 2px 0;">${s}</span>`).join("")}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:6px 12px 6px 0; color:#686B70; vertical-align:top; white-space:nowrap;"><strong>Estimated timeline:</strong></td>
+        <td style="padding:6px 0; color:#002A4E;">${e.duration}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 12px 6px 0; color:#686B70; vertical-align:top; white-space:nowrap;"><strong>Complexity:</strong></td>
+        <td style="padding:6px 0; color:#002A4E; text-transform:capitalize;">${e.complexity}</td>
+      </tr>
+      ${e.modules.length > 0 ? `<tr>
+        <td style="padding:6px 12px 6px 0; color:#686B70; vertical-align:top; white-space:nowrap;"><strong>Workiva modules:</strong></td>
+        <td style="padding:6px 0; color:#002A4E;">${e.modules.join(", ")}</td>
+      </tr>` : ""}
+      <tr>
+        <td style="padding:6px 12px 6px 0; color:#686B70; vertical-align:top; white-space:nowrap;"><strong>Prospect:</strong></td>
+        <td style="padding:6px 0; color:#002A4E;">${e.email}</td>
+      </tr>
+    </table>
   </div>
 
   <a href="mailto:${e.email}?subject=Your Workiva implementation estimate from Harbor View Consulting" class="btn">Send Estimate to Prospect →</a>
@@ -196,6 +225,28 @@ export const handler: Handler = async (event) => {
   <div class="footer">
     This lead came through the Workiva Scoping Agent.<br />
     Send the prospect their estimate within 24 hours.
+  </div>
+</div>
+
+<!-- Full Chat Transcript -->
+<div style="background: white; border-radius: 12px; padding: 32px; max-width: 600px; margin: 24px auto 0; border: 1px solid #D1D3D4;">
+  <div style="display:flex; align-items:center; margin-bottom:20px;">
+    <strong style="color:#002A4E; font-size:16px;">Chat Transcript</strong>
+    <span style="margin-left:auto; color:#686B70; font-size:12px;">${transcript.length} messages &middot; ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
+  </div>
+  ${transcript.map((msg) => {
+    const isAssistant = msg.role === "assistant";
+    const label = isAssistant ? "Harbor View" : "Prospect";
+    const labelColor = isAssistant ? "#002A4E" : "#079FE0";
+    const bgColor = isAssistant ? "#F8F9FA" : "#F0F7FF";
+    const escapedContent = esc(msg.content).replace(/\n/g, "<br>");
+    return `<div style="margin-bottom:16px;">
+      <div style="font-size:11px; font-weight:700; color:${labelColor}; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.3px;">${label}</div>
+      <div style="background:${bgColor}; border-radius:8px; padding:12px 16px; font-size:13px; color:#333333; line-height:1.6;">${escapedContent}</div>
+    </div>`;
+  }).join("")}
+  <div style="text-align:center; color:#686B70; font-size:11px; margin-top:16px; padding-top:16px; border-top:1px solid #D1D3D4;">
+    Transcript captured by the Harbor View Workiva Scoping Agent
   </div>
 </div>
 </body>

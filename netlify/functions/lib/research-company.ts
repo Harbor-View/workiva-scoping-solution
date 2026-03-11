@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
 
@@ -24,7 +25,25 @@ export interface CompanyResearch {
   company_research: string;
 }
 
-export async function researchCompany(companyName: string, industry: string): Promise<CompanyResearch> {
+function normalizeKey(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+export async function researchCompany(companyName: string, industry: string, supabase?: SupabaseClient): Promise<CompanyResearch> {
+  // Check cache first
+  if (supabase) {
+    const key = normalizeKey(companyName);
+    const { data: cached } = await supabase
+      .from("company_research")
+      .select("research")
+      .eq("company_key", key)
+      .single();
+
+    if (cached?.research) {
+      return cached.research as CompanyResearch;
+    }
+  }
+
   const response = await anthropic.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 1024,
@@ -82,7 +101,18 @@ Return ONLY valid JSON with these fields:
     };
   }
 
-  return JSON.parse(jsonMatch[0]) as CompanyResearch;
+  const result = JSON.parse(jsonMatch[0]) as CompanyResearch;
+
+  // Cache the result
+  if (supabase) {
+    const key = normalizeKey(companyName);
+    await supabase
+      .from("company_research")
+      .upsert({ company_key: key, company_name: companyName, research: result }, { onConflict: "company_key" })
+      .then(() => {}); // fire-and-forget
+  }
+
+  return result;
 }
 
 export async function upsertHubSpotCompany(research: CompanyResearch): Promise<string | null> {
