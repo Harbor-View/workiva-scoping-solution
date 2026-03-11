@@ -243,33 +243,38 @@ export default function Landing() {
           <div className="text-center mb-14">
             <h2 className="text-3xl font-bold text-hv-navy mb-3">Workiva Services</h2>
             <p className="text-hv-slate max-w-xl mx-auto">
-              We scope and deliver across the full Workiva platform. Learn more about each service or start your estimate below.
+              We scope and deliver across the full Workiva platform.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {SERVICES.map((service) => (
-              <div key={service.title} className="p-6 rounded-2xl bg-white border border-hv-border hover:border-hv-blue hover:shadow-md transition-all duration-200 group">
-                <CheckCircle className="w-8 h-8 text-hv-blue mb-4 group-hover:scale-110 transition-transform" />
+            {SERVICES.map((service, i) => (
+              <div
+                key={service.title}
+                className="relative p-6 rounded-2xl bg-white border border-hv-border hover:border-hv-blue hover:shadow-lg transition-all duration-200 group overflow-hidden"
+              >
+                {/* Accent bar */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-hv-blue to-hv-blue/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-t-2xl" />
+                {/* Step number watermark */}
+                <div className="absolute bottom-4 right-4 text-6xl font-black text-hv-navy/5 select-none leading-none">
+                  {String(i + 1).padStart(2, "0")}
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-hv-blue/10 flex items-center justify-center mb-4 group-hover:bg-hv-blue/20 transition-colors">
+                  <CheckCircle className="w-5 h-5 text-hv-blue" />
+                </div>
                 <h3 className="text-lg font-bold text-hv-navy mb-2">{service.title}</h3>
                 <p className="text-hv-slate text-sm leading-relaxed">{service.description}</p>
               </div>
             ))}
           </div>
-          <div className="text-center mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="text-center mt-10">
             <a
               href="https://www.harborview-consulting.com/services/workiva"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 border border-hv-blue text-hv-blue font-semibold px-6 py-3 rounded-xl hover:bg-hv-blue/5 transition"
+              className="inline-flex items-center gap-2 text-hv-blue font-semibold hover:underline text-sm"
             >
-              View all Workiva services <ArrowRight className="w-4 h-4" />
+              View all Workiva services on harborview-consulting.com <ArrowRight className="w-4 h-4" />
             </a>
-            <button
-              onClick={scrollToCTA}
-              className="inline-flex items-center gap-2 bg-hv-blue hover:bg-hv-blue/90 text-white font-semibold px-6 py-3 rounded-xl transition shadow-sm"
-            >
-              Get an estimate <ArrowRight className="w-4 h-4" />
-            </button>
           </div>
         </div>
       </section>
@@ -355,14 +360,22 @@ export default function Landing() {
       </section>
 
       {/* Bottom CTA */}
-      <section ref={ctaRef} className="bg-hv-blue py-20">
-        <div className="max-w-2xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold text-white mb-3">Ready to get your estimate?</h2>
-          <p className="text-white/80 mb-8">
-            Enter your work email to start. Our AI will ask a few questions, and
-            your personalized estimate will arrive within 24 hours.
+      <section ref={ctaRef} className="relative bg-hv-navy py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-hv-navy via-hv-navy to-[#0a4a7a]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_#079FE020_0%,_transparent_60%)]" />
+        <div className="relative z-10 max-w-3xl mx-auto px-6">
+          <div className="inline-flex items-center gap-2 bg-hv-blue/20 border border-hv-blue/30 text-hv-blue text-sm font-semibold px-4 py-1.5 rounded-full mb-6">
+            <span className="w-2 h-2 rounded-full bg-hv-blue animate-pulse" />
+            No commitment required
+          </div>
+          <h2 className="text-4xl font-black text-white mb-4">
+            Ready to get your estimate?
+          </h2>
+          <p className="text-xl text-white/80 mb-10 leading-relaxed">
+            Enter your work email to start. Answer a few questions and receive
+            a personalized fee range within 24 hours.
           </p>
-          <EmailForm size="large" />
+          <EmailForm size="default" />
         </div>
       </section>
 
