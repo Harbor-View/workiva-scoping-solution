@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Shield } from "lucide-react";
 
 const HUBSPOT_MEETING_URL = import.meta.env.VITE_HUBSPOT_MEETING_URL as string;
 
@@ -31,9 +31,19 @@ export default function Confirmation() {
   return (
     <div className="min-h-screen bg-hv-white flex flex-col">
       {/* Header */}
-      <header className="px-8 py-6">
-        <div className="max-w-6xl mx-auto">
-          <span className="text-hv-navy font-bold text-lg tracking-wide">Harbor View Consulting</span>
+      <header className="bg-white border-b border-hv-border px-8 py-4 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src="/hvc-icon.png" alt="Harbor View Consulting" className="w-8 h-8 rounded" />
+            <div>
+              <span className="text-hv-navy font-bold tracking-wide block leading-tight">Harbor View Consulting</span>
+              <span className="text-[11px] text-hv-slate">Workiva Implementation Partner</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 text-hv-mint">
+            <Shield className="w-3.5 h-3.5" />
+            <span className="text-[11px] font-semibold">Registered Workiva Partner</span>
+          </div>
         </div>
       </header>
 
@@ -68,30 +78,6 @@ export default function Confirmation() {
               </p>
             </div>
 
-            {/* Your Contacts */}
-            <div className="bg-white rounded-2xl shadow-sm border border-hv-border p-8 mb-8">
-              <h2 className="text-lg font-bold text-hv-navy mb-1">Your Harbor View Contacts</h2>
-              <p className="text-sm text-hv-slate mb-5">
-                Have questions? Reach out to us directly anytime.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <a href="mailto:mmolloy@harborview-consulting.com" className="flex items-center gap-3 p-4 rounded-xl border border-hv-border hover:border-hv-blue/40 hover:bg-hv-blue/5 transition group">
-                  <img src="/team-mike-molloy.png" alt="Mike Molloy" className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" />
-                  <div>
-                    <span className="text-sm font-semibold text-hv-navy group-hover:text-hv-blue transition block">Mike Molloy</span>
-                    <span className="text-xs text-hv-slate group-hover:text-hv-blue transition">mmolloy@harborview-consulting.com</span>
-                  </div>
-                </a>
-                <a href="mailto:kcollingsworth@harborview-consulting.com" className="flex items-center gap-3 p-4 rounded-xl border border-hv-border hover:border-hv-blue/40 hover:bg-hv-blue/5 transition group">
-                  <img src="/team-kevin-collingsworth.png" alt="Kevin Collingsworth" className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" />
-                  <div>
-                    <span className="text-sm font-semibold text-hv-navy group-hover:text-hv-blue transition block">Kevin Collingsworth</span>
-                    <span className="text-xs text-hv-slate group-hover:text-hv-blue transition">kcollingsworth@harborview-consulting.com</span>
-                  </div>
-                </a>
-              </div>
-            </div>
-
             {/* Book a call */}
             <div className="bg-white rounded-2xl shadow-sm border border-hv-border p-8 mb-8">
               <h2 className="text-lg font-bold text-hv-navy mb-1">Book a call while you wait</h2>
@@ -116,7 +102,28 @@ export default function Confirmation() {
 
           {/* Right Sidebar */}
           <div className="hidden lg:block w-80 shrink-0">
-            <div className="sticky top-8 space-y-6">
+            <div className="sticky top-24 space-y-6">
+
+              {/* Your Contacts */}
+              <div className="bg-white rounded-2xl shadow-sm border border-hv-border p-6">
+                <h3 className="text-sm font-bold text-hv-navy mb-3">Your Harbor View Contacts</h3>
+                <div className="space-y-3">
+                  <a href="mailto:mmolloy@harborview-consulting.com" className="flex items-center gap-3 group">
+                    <img src="/team-mike-molloy.png" alt="Mike Molloy" className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" />
+                    <div>
+                      <span className="text-sm font-semibold text-hv-navy group-hover:text-hv-blue transition block leading-tight">Mike Molloy</span>
+                      <span className="text-[11px] text-hv-slate group-hover:text-hv-blue transition">mmolloy@harborview-consulting.com</span>
+                    </div>
+                  </a>
+                  <a href="mailto:kcollingsworth@harborview-consulting.com" className="flex items-center gap-3 group">
+                    <img src="/team-kevin-collingsworth.png" alt="Kevin Collingsworth" className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" />
+                    <div>
+                      <span className="text-sm font-semibold text-hv-navy group-hover:text-hv-blue transition block leading-tight">Kevin Collingsworth</span>
+                      <span className="text-[11px] text-hv-slate group-hover:text-hv-blue transition">kcollingsworth@harborview-consulting.com</span>
+                    </div>
+                  </a>
+                </div>
+              </div>
 
               {/* CPE Training Ad */}
               <div className="bg-white rounded-2xl shadow-sm border border-hv-border p-6">
