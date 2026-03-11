@@ -11,40 +11,17 @@ export async function checkRateLimit(
   maxAttempts: number,
   windowMinutes: number
 ): Promise<RateLimitResult> {
-  const windowStart = new Date(Date.now() - windowMinutes * 60 * 1000);
+  const { data, error } = await supabase.rpc("check_rate_limit", {
+    p_key: key,
+    p_max_attempts: maxAttempts,
+    p_window_minutes: windowMinutes,
+  });
 
-  // Try to find existing record
-  const { data: existing } = await supabase
-    .from("rate_limits")
-    .select("count, window_start")
-    .eq("key", key)
-    .single();
-
-  if (!existing) {
-    // First request — insert
-    await supabase.from("rate_limits").insert({ key, count: 1, window_start: new Date().toISOString() });
-    return { allowed: true, remaining: maxAttempts - 1 };
+  if (error || !data?.[0]) {
+    // Fail open — don't block legitimate users if RPC fails
+    console.error("Rate limit RPC error:", error);
+    return { allowed: true, remaining: maxAttempts };
   }
 
-  // Window expired — reset
-  if (new Date(existing.window_start) < windowStart) {
-    await supabase
-      .from("rate_limits")
-      .update({ count: 1, window_start: new Date().toISOString() })
-      .eq("key", key);
-    return { allowed: true, remaining: maxAttempts - 1 };
-  }
-
-  // Within window — check limit
-  if (existing.count >= maxAttempts) {
-    return { allowed: false, remaining: 0 };
-  }
-
-  // Increment
-  await supabase
-    .from("rate_limits")
-    .update({ count: existing.count + 1 })
-    .eq("key", key);
-
-  return { allowed: true, remaining: maxAttempts - existing.count - 1 };
+  return { allowed: data[0].allowed, remaining: data[0].remaining };
 }

@@ -48,6 +48,15 @@ export const handler: Handler = async (event) => {
     return { statusCode: 429, body: JSON.stringify({ error: "Too many requests. Please try again later." }) };
   }
 
+  // IP-based rate limit: 10 OTP sends per IP per hour
+  const clientIp = event.headers["x-nf-client-connection-ip"] || event.headers["client-ip"] || "unknown";
+  if (clientIp !== "unknown") {
+    const { allowed: ipAllowed } = await checkRateLimit(supabase, `send-ip:${clientIp}`, 10, 60);
+    if (!ipAllowed) {
+      return { statusCode: 429, body: JSON.stringify({ error: "Too many requests. Please try again later." }) };
+    }
+  }
+
   const code = randomInt(100000, 999999).toString();
   const expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 

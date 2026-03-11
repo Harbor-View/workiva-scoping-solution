@@ -39,6 +39,15 @@ export const handler: Handler = async (event) => {
     return { statusCode: 429, body: JSON.stringify({ error: "Too many attempts. Please request a new code." }) };
   }
 
+  // IP-based rate limit: 15 verify attempts per IP per 10 minutes
+  const clientIp = event.headers["x-nf-client-connection-ip"] || event.headers["client-ip"] || "unknown";
+  if (clientIp !== "unknown") {
+    const { allowed: ipAllowed } = await checkRateLimit(supabase, `verify-ip:${clientIp}`, 15, 10);
+    if (!ipAllowed) {
+      return { statusCode: 429, body: JSON.stringify({ error: "Too many attempts. Please try again later." }) };
+    }
+  }
+
   // Find a valid, unused token
   const { data: token, error: fetchError } = await supabase
     .from("otp_tokens")
@@ -50,12 +59,8 @@ export const handler: Handler = async (event) => {
     .limit(1)
     .single();
 
-  if (fetchError || !token) {
-    return { statusCode: 400, body: JSON.stringify({ error: "Invalid verification code" }) };
-  }
-
-  if (new Date(token.expires_at) < new Date()) {
-    return { statusCode: 400, body: JSON.stringify({ error: "Verification code has expired" }) };
+  if (fetchError || !token || new Date(token.expires_at) < new Date()) {
+    return { statusCode: 400, body: JSON.stringify({ error: "Invalid or expired verification code" }) };
   }
 
   // Mark token as used
