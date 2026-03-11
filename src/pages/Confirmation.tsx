@@ -259,7 +259,7 @@ export default function Confirmation() {
                       Return to Scoping Chat
                     </button>
                     <a
-                      href="mailto:mmolloy@harborview-consulting.com?subject=Workiva%20Implementation%20—%20Quick%20Question"
+                      href="mailto:kcollingsworth@harborview-consulting.com?subject=Workiva%20Implementation%20—%20Quick%20Question"
                       className="inline-flex items-center gap-2 bg-white border-2 border-hv-blue text-hv-blue font-semibold text-sm px-6 py-3 rounded-xl hover:bg-hv-blue/5 transition"
                     >
                       <Mail className="w-4 h-4" />
