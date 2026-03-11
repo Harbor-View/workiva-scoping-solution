@@ -132,7 +132,7 @@ export default function Confirmation() {
                       <span className="text-sm font-semibold text-hv-navy block leading-tight">Mike Molloy</span>
                       <a href="mailto:mmolloy@harborview-consulting.com" className="text-[11px] text-hv-slate hover:text-hv-blue transition block">mmolloy@harborview-consulting.com</a>
                       <a href="tel:+14439092727" className="text-[11px] text-hv-slate hover:text-hv-blue transition block">(443) 909-2727</a>
-                      <a href="https://www.linkedin.com/in/mikemolloy1/" target="_blank" rel="noopener noreferrer" className="text-[11px] text-hv-blue hover:text-hv-blue/70 transition">LinkedIn</a>
+                      <a href="https://www.linkedin.com/in/mpmolloy/" target="_blank" rel="noopener noreferrer" className="text-[11px] text-hv-blue hover:text-hv-blue/70 transition">LinkedIn</a>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -141,7 +141,7 @@ export default function Confirmation() {
                       <span className="text-sm font-semibold text-hv-navy block leading-tight">Kevin Collingsworth</span>
                       <a href="mailto:kcollingsworth@harborview-consulting.com" className="text-[11px] text-hv-slate hover:text-hv-blue transition block">kcollingsworth@harborview-consulting.com</a>
                       <a href="tel:+14439092702" className="text-[11px] text-hv-slate hover:text-hv-blue transition block">(443) 909-2702</a>
-                      <a href="https://www.linkedin.com/in/kevincollingsworth/" target="_blank" rel="noopener noreferrer" className="text-[11px] text-hv-blue hover:text-hv-blue/70 transition">LinkedIn</a>
+                      <a href="https://www.linkedin.com/in/kevin-collingsworth-b62417102/" target="_blank" rel="noopener noreferrer" className="text-[11px] text-hv-blue hover:text-hv-blue/70 transition">LinkedIn</a>
                     </div>
                   </div>
                 </div>
