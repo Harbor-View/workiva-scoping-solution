@@ -423,14 +423,45 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-gray-950 text-white p-8">
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold">Admin / Test Console</h1>
-            <p className="text-sm text-gray-400 mt-1">Quickly jump into different page experiences</p>
+            <p className="text-sm text-gray-400 mt-1">Test and preview the Workiva Scoping Agent</p>
           </div>
           <button onClick={logout} className="text-xs text-gray-500 hover:text-red-400 border border-gray-700 px-3 py-1.5 rounded-lg transition">
             Log out
           </button>
+        </div>
+
+        {/* Getting Started Guide */}
+        <div className="bg-gradient-to-br from-hv-navy to-hv-navy/80 rounded-xl p-6 mb-6 border border-hv-blue/20">
+          <h2 className="text-base font-bold text-white mb-3">How this system works</h2>
+          <p className="text-sm text-white/70 leading-relaxed mb-4">
+            The Workiva Scoping Agent qualifies prospects through an AI-powered chat, generates a fee estimate, researches the company, and sends the HVC team a notification email with full details. Here's how to test it:
+          </p>
+          <div className="space-y-3">
+            <div className="flex gap-3">
+              <span className="shrink-0 w-6 h-6 rounded-full bg-hv-blue flex items-center justify-center text-xs font-bold">1</span>
+              <div>
+                <p className="text-sm font-semibold text-white">Try the real prospect flow</p>
+                <p className="text-xs text-white/60">Visit the <button onClick={() => navigate("/")} className="text-hv-blue hover:underline">Landing Page</button> and go through the full experience: enter your email, verify with OTP, chat with the AI, and see the confirmation page.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <span className="shrink-0 w-6 h-6 rounded-full bg-hv-blue flex items-center justify-center text-xs font-bold">2</span>
+              <div>
+                <p className="text-sm font-semibold text-white">Quick-launch individual pages</p>
+                <p className="text-xs text-white/60">Use the buttons below to jump directly into any page with a test profile. Great for reviewing the Chat UI or Confirmation page without going through OTP each time.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <span className="shrink-0 w-6 h-6 rounded-full bg-hv-blue flex items-center justify-center text-xs font-bold">3</span>
+              <div>
+                <p className="text-sm font-semibold text-white">Test the notification email</p>
+                <p className="text-xs text-white/60">Use "Simulate Chat Completion" at the bottom to fire a realistic scoping result for any company. This sends the same notification email the HVC team receives when a real prospect completes the chat.</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Active Session */}
@@ -447,13 +478,14 @@ export default function Admin() {
               </button>
             </div>
           ) : (
-            <p className="text-sm text-gray-500">No active session</p>
+            <p className="text-sm text-gray-500">No active session. Use Quick Launch below or go through the real flow from the Landing Page.</p>
           )}
         </div>
 
         {/* Test Profile Selector */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Test Profile</h2>
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Test Profile</h2>
+          <p className="text-xs text-gray-500 mb-3">Choose which persona to use when quick-launching pages. This controls what the chat and confirmation pages look like.</p>
           <div className="space-y-2">
             {(Object.entries(TEST_PROFILES) as [ProfileKey, typeof TEST_PROFILES[ProfileKey]][]).map(([key, profile]) => (
               <label key={key} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition ${selectedProfile === key ? "bg-gray-800 border border-gray-700" : "hover:bg-gray-800/50 border border-transparent"}`}>
@@ -467,6 +499,9 @@ export default function Admin() {
                 <div className="flex-1">
                   <span className="text-sm font-medium">{profile.label}</span>
                   {key !== "custom" && <span className="text-xs text-gray-500 ml-2 font-mono">{profile.email}</span>}
+                  {key === "prospect" && <span className="block text-xs text-gray-600 mt-0.5">Standard prospect chat and confirmation experience</span>}
+                  {key === "workiva" && <span className="block text-xs text-gray-600 mt-0.5">Seller-tailored chat prompts and partner confirmation page</span>}
+                  {key === "custom" && <span className="block text-xs text-gray-600 mt-0.5">Test with any email domain to see how the system responds</span>}
                 </div>
               </label>
             ))}
@@ -484,28 +519,40 @@ export default function Admin() {
 
         {/* Quick Launch */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Quick Launch</h2>
-          <p className="text-xs text-gray-500 mb-4">Sets session with selected profile and navigates to the page.</p>
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Quick Launch</h2>
+          <p className="text-xs text-gray-500 mb-4">Jump directly into any page using the selected test profile above. Skips OTP verification.</p>
           <div className="grid grid-cols-2 gap-3">
-            <button onClick={() => startSession("/chat")} className="bg-hv-blue hover:bg-hv-blue/90 text-white text-sm font-semibold py-3 px-4 rounded-xl transition">
-              Chat Experience
-            </button>
-            <button onClick={() => startSession("/confirmation")} className="bg-hv-mint hover:bg-hv-mint/90 text-white text-sm font-semibold py-3 px-4 rounded-xl transition">
-              Confirmation Page
-            </button>
-            <button onClick={() => navigate("/")} className="bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold py-3 px-4 rounded-xl transition border border-gray-700">
-              Landing Page
-            </button>
-            <button onClick={() => navigate("/verify")} className="bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold py-3 px-4 rounded-xl transition border border-gray-700">
-              Verify OTP Page
-            </button>
+            <div>
+              <button onClick={() => startSession("/chat")} className="w-full bg-hv-blue hover:bg-hv-blue/90 text-white text-sm font-semibold py-3 px-4 rounded-xl transition">
+                Chat Experience
+              </button>
+              <p className="text-[10px] text-gray-600 mt-1 text-center">AI scoping conversation</p>
+            </div>
+            <div>
+              <button onClick={() => startSession("/confirmation")} className="w-full bg-hv-mint hover:bg-hv-mint/90 text-white text-sm font-semibold py-3 px-4 rounded-xl transition">
+                Confirmation Page
+              </button>
+              <p className="text-[10px] text-gray-600 mt-1 text-center">Post-chat meeting scheduling</p>
+            </div>
+            <div>
+              <button onClick={() => navigate("/")} className="w-full bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold py-3 px-4 rounded-xl transition border border-gray-700">
+                Landing Page
+              </button>
+              <p className="text-[10px] text-gray-600 mt-1 text-center">Email entry + OTP gate</p>
+            </div>
+            <div>
+              <button onClick={() => navigate("/verify")} className="w-full bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold py-3 px-4 rounded-xl transition border border-gray-700">
+                Verify OTP Page
+              </button>
+              <p className="text-[10px] text-gray-600 mt-1 text-center">6-digit code entry</p>
+            </div>
           </div>
         </div>
 
         {/* Workiva Seller Quick Launch */}
         <div className="bg-gray-900 border border-purple-500/30 rounded-xl p-5 mb-6">
-          <h2 className="text-sm font-semibold text-purple-400 uppercase tracking-wider mb-3">Workiva Seller Experience</h2>
-          <p className="text-xs text-gray-500 mb-4">Launches as testuser@workiva.com regardless of profile selection.</p>
+          <h2 className="text-sm font-semibold text-purple-400 uppercase tracking-wider mb-1">Workiva Seller Experience</h2>
+          <p className="text-xs text-gray-500 mb-4">Preview what Workiva sellers see. Launches as testuser@workiva.com — this triggers the seller-specific system prompt, tailored quick replies, and the partner confirmation page with Workiva Day CTA.</p>
           <div className="grid grid-cols-2 gap-3">
             <button onClick={() => startSession("/chat", "testuser@workiva.com")} className="bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold py-3 px-4 rounded-xl transition">
               Seller Chat
@@ -519,7 +566,10 @@ export default function Admin() {
         {/* Simulate Chat Completion */}
         <div className="bg-gray-900 border border-amber-500/30 rounded-xl p-5 mb-6">
           <h2 className="text-sm font-semibold text-amber-400 uppercase tracking-wider mb-1">Simulate Chat Completion</h2>
-          <p className="text-xs text-gray-500 mb-4">Calls complete-chat as if a scoping chat just finished. Triggers company research, notification email, and transcript PDF.</p>
+          <p className="text-xs text-gray-500 mb-2">Test the backend without chatting. Enter a company name and pick a service — this fires the <span className="font-mono text-amber-400/80">complete-chat</span> function with a realistic transcript, just like a real prospect conversation completed.</p>
+          <p className="text-xs text-gray-500 mb-4">
+            <span className="font-semibold text-gray-400">What happens:</span> The system researches the company via Claude, saves a session to Supabase, and sends the HVC notification email with company research, scoping summary, fee range, and full transcript.
+          </p>
 
           <input
             type="text"
@@ -570,7 +620,8 @@ export default function Admin() {
 
         {/* Direct Links */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Direct Links (No Session Change)</h2>
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Direct Links</h2>
+          <p className="text-xs text-gray-500 mb-3">Open any page without changing the current session. Useful if you want to see what happens when you visit a page without being authenticated.</p>
           <div className="flex flex-wrap gap-2">
             {["/", "/verify", "/chat", "/confirmation"].map((path) => (
               <a key={path} href={path} className="text-xs text-gray-400 hover:text-white font-mono bg-gray-800 px-3 py-1.5 rounded-lg transition">
