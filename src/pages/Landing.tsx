@@ -24,27 +24,22 @@ const SERVICES = [
   {
     title: "Financial Reporting",
     description: "Streamline your financial reporting process with automated workflows, linked data, and audit-ready controls.",
-    href: "https://www.harborview-consulting.com/services/workiva/financial-reporting",
   },
   {
     title: "Management Reporting",
     description: "Create dynamic management reports with real-time data integration across your organization.",
-    href: "https://www.harborview-consulting.com/services/workiva/management-reporting-quick-start",
   },
   {
     title: "Connectivity (Wdata)",
     description: "Seamless data integration and transformation using Workiva's Wdata platform.",
-    href: "https://www.harborview-consulting.com/services/workiva/wdata",
   },
   {
     title: "SOX / Internal Controls",
     description: "Governance, Risk, and Compliance management — structured around Workiva's GRC framework.",
-    href: "https://www.harborview-consulting.com/services/workiva/audit-management-quick-start",
   },
   {
     title: "ESG Reporting",
     description: "Environmental, Social, and Governance reporting built on Workiva's purpose-built ESG platform.",
-    href: "https://www.harborview-consulting.com/services/workiva/esg",
   },
 ];
 
@@ -253,27 +248,27 @@ export default function Landing() {
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {SERVICES.map((service) => (
-              <div key={service.title} className="p-6 rounded-2xl bg-white border border-hv-border hover:border-hv-blue hover:shadow-md transition-all duration-200 group flex flex-col">
+              <div key={service.title} className="p-6 rounded-2xl bg-white border border-hv-border hover:border-hv-blue hover:shadow-md transition-all duration-200 group">
                 <CheckCircle className="w-8 h-8 text-hv-blue mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-lg font-bold text-hv-navy mb-2">{service.title}</h3>
-                <p className="text-hv-slate text-sm leading-relaxed mb-4 flex-1">{service.description}</p>
-                <a
-                  href={service.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-hv-blue text-sm font-semibold hover:underline flex items-center gap-1"
-                >
-                  Learn more <ArrowRight className="w-3.5 h-3.5" />
-                </a>
+                <p className="text-hv-slate text-sm leading-relaxed">{service.description}</p>
               </div>
             ))}
           </div>
-          <div className="text-center mt-10">
+          <div className="text-center mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href="https://www.harborview-consulting.com/services/workiva"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 border border-hv-blue text-hv-blue font-semibold px-6 py-3 rounded-xl hover:bg-hv-blue/5 transition"
+            >
+              View all Workiva services <ArrowRight className="w-4 h-4" />
+            </a>
             <button
               onClick={scrollToCTA}
               className="inline-flex items-center gap-2 bg-hv-blue hover:bg-hv-blue/90 text-white font-semibold px-6 py-3 rounded-xl transition shadow-sm"
             >
-              Get an estimate for any service <ArrowRight className="w-4 h-4" />
+              Get an estimate <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
