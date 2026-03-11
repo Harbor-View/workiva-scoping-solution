@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { GraduationCap, Shield, Phone, Mail, Linkedin, ExternalLink, Clock, CheckCircle2, Handshake, Users } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { GraduationCap, Shield, Phone, Mail, Linkedin, ExternalLink, Clock, CheckCircle2, Handshake, Users, MessageCircle } from "lucide-react";
 
 const HUBSPOT_MEETING_URL = import.meta.env.VITE_HUBSPOT_MEETING_URL as string;
 
 export default function Confirmation() {
   const navigate = useNavigate();
+  const location = useLocation();
   const hubspotRef = useRef<HTMLDivElement>(null);
   const [isWorkivaSeller, setIsWorkivaSeller] = useState(false);
+  const skipped = (location.state as { skipped?: boolean } | null)?.skipped ?? false;
 
   // Auth guard
   useEffect(() => {
@@ -235,34 +237,69 @@ export default function Confirmation() {
 
             {/* Left Column — Main Content */}
             <div className="flex-1 min-w-0">
-              {/* Success card */}
-              <div className="bg-white rounded-2xl shadow-sm border border-hv-border p-8 mb-8 text-center">
-                <div className="w-14 h-14 rounded-full bg-hv-mint/15 flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 className="w-7 h-7 text-hv-mint" />
+              {skipped ? (
+                /* Skipped — need to complete chat for estimate */
+                <div className="bg-white rounded-2xl shadow-sm border border-hv-border p-8 mb-8 text-center">
+                  <div className="w-14 h-14 rounded-full bg-hv-coral/15 flex items-center justify-center mx-auto mb-4">
+                    <MessageCircle className="w-7 h-7 text-hv-coral" />
+                  </div>
+
+                  <h1 className="text-2xl font-bold text-hv-navy mb-2">No problem — we're here when you're ready</h1>
+                  <p className="text-hv-slate mb-6 max-w-lg mx-auto">
+                    To receive a personalized fee estimate, you'll need to complete the scoping chat so we can understand your Workiva needs.
+                    In the meantime, feel free to book a meeting or reach out to our team directly.
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <button
+                      onClick={() => navigate("/chat")}
+                      className="inline-flex items-center gap-2 bg-hv-blue hover:bg-hv-blue/90 text-white font-semibold text-sm px-6 py-3 rounded-xl transition"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Return to Scoping Chat
+                    </button>
+                    <a
+                      href="mailto:mmolloy@harborview-consulting.com?subject=Workiva%20Implementation%20—%20Quick%20Question"
+                      className="inline-flex items-center gap-2 bg-white border-2 border-hv-blue text-hv-blue font-semibold text-sm px-6 py-3 rounded-xl hover:bg-hv-blue/5 transition"
+                    >
+                      <Mail className="w-4 h-4" />
+                      Email Us Instead
+                    </a>
+                  </div>
                 </div>
+              ) : (
+                /* Success card */
+                <div className="bg-white rounded-2xl shadow-sm border border-hv-border p-8 mb-8 text-center">
+                  <div className="w-14 h-14 rounded-full bg-hv-mint/15 flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 className="w-7 h-7 text-hv-mint" />
+                  </div>
 
-                <h1 className="text-2xl font-bold text-hv-navy mb-2">You're all set</h1>
-                <p className="text-hv-slate mb-6">
-                  Thanks for walking us through your Workiva needs. Our team will review
-                  your responses and send a personalized estimate to your inbox.
-                </p>
+                  <h1 className="text-2xl font-bold text-hv-navy mb-2">You're all set</h1>
+                  <p className="text-hv-slate mb-6">
+                    Thanks for walking us through your Workiva needs. Our team will review
+                    your responses and send a personalized estimate to your inbox.
+                  </p>
 
-                <div className="inline-flex items-center gap-2 bg-hv-blue/8 text-hv-blue font-semibold text-sm px-5 py-2.5 rounded-full">
-                  <Clock className="w-4 h-4" />
-                  Your estimate will arrive within 24 hours
+                  <div className="inline-flex items-center gap-2 bg-hv-blue/8 text-hv-blue font-semibold text-sm px-5 py-2.5 rounded-full">
+                    <Clock className="w-4 h-4" />
+                    Your estimate will arrive within 24 hours
+                  </div>
+
+                  <p className="text-xs text-hv-slate mt-4">
+                    Your estimate will arrive before any meeting you book below.
+                  </p>
                 </div>
-
-                <p className="text-xs text-hv-slate mt-4">
-                  Your estimate will arrive before any meeting you book below.
-                </p>
-              </div>
+              )}
 
               {/* Book a call */}
               <div className="bg-white rounded-2xl shadow-sm border border-hv-border p-8 mb-8">
-                <h2 className="text-lg font-bold text-hv-navy mb-1">Book a call while you wait</h2>
+                <h2 className="text-lg font-bold text-hv-navy mb-1">
+                  {skipped ? "Or book a call with our team" : "Book a call while you wait"}
+                </h2>
                 <p className="text-sm text-hv-slate mb-6">
-                  Optional — but a great way to ask questions and align on next steps.
-                  Your estimate will be in your inbox before the meeting.
+                  {skipped
+                    ? "If you'd prefer to talk through your needs in person, pick a time below and we'll take it from there."
+                    : "Optional — but a great way to ask questions and align on next steps. Your estimate will be in your inbox before the meeting."}
                 </p>
 
                 {HUBSPOT_MEETING_URL ? (

@@ -70,7 +70,7 @@ export default function Chat() {
         body: JSON.stringify({ transcript: nonEmptyMessages, skipped: true }),
       });
     }
-    navigate("/confirmation");
+    navigate("/confirmation", { state: { skipped: true } });
   }
 
   // Auth guard
