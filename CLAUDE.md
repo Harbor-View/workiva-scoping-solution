@@ -23,22 +23,32 @@ Workiva Scoping Solution for Harbor View Consulting — an AI-powered chat that 
 
 | Function | Purpose |
 |---|---|
-| `send-otp` | Generate 6-digit OTP, store in Supabase `otp_tokens`, email via SES |
-| `verify-otp` | Validate OTP, create lead in Supabase `leads` |
-| `chat` | Proxy to Claude API with system prompt selection (prospect vs seller) |
-| `complete-chat` | Save session, research company via Claude, generate proposal slug/password, email HVC |
-| `send-transcript` | Generate branded PDF (PDFKit), send as SES attachment |
+| `send-otp` | Generate 6-digit OTP (crypto.randomInt), store in Supabase `otp_tokens`, email via SES. Rate limited: 5/email/hr. |
+| `verify-otp` | Validate OTP, issue session token (stored in `session_tokens`), upsert lead. Rate limited: 5 attempts/10min with OTP lockout. |
+| `chat` | Proxy to Claude API with system prompt selection (prospect vs seller). Requires Bearer token. Server-side `isWorkivaSeller` detection. |
+| `complete-chat` | Save session, research company (cached in `company_research`), email HVC with scoping summary + full transcript. Requires Bearer token. |
+| `send-transcript` | Generate branded PDF (PDFKit), send as SES attachment. Requires Bearer token. |
+
+**Shared libraries** (`netlify/functions/lib/`):
+- `auth.ts` — `validateSession()` extracts Bearer token, validates against `session_tokens` table
+- `rate-limit.ts` — Supabase-backed sliding-window rate limiting
+- `html-escape.ts` — `esc()`, `escUrl()`, `sanitizeSubject()` for email template safety
+- `system-prompt.ts` — `SYSTEM_PROMPT` and `WORKIVA_SELLER_SYSTEM_PROMPT`
+- `research-company.ts` — Claude-powered company research with Supabase cache
 
 **Key libraries:** `@anthropic-ai/sdk` (Claude), `@supabase/supabase-js`, `@aws-sdk/client-ses`, `pdfkit`, `react-markdown` + `remark-gfm`.
 
 ## Key Patterns
 
 - **`<SCOPING_COMPLETE>` tag:** Claude emits `<SCOPING_COMPLETE>{JSON}</SCOPING_COMPLETE>` when scoping is done. Chat.tsx parses this to trigger `complete-chat` and strips it from display.
-- **Dual experience:** `@workiva.com` emails get `WORKIVA_SELLER_SYSTEM_PROMPT`; all others get `SYSTEM_PROMPT`. Detection via email domain in both frontend and backend.
-- **Session storage:** `hv_lead` (leadId + email), `hv_admin` (admin auth flag), `hv_proposal_slug`.
-- **Proposal conventions:** Slug = `{company-name}-workiva`, password = `{companyname}2026`, URL = `https://proposals.harborview-consulting.com/{slug}`.
+- **Session token auth:** All protected endpoints require `Authorization: Bearer <token>`. Tokens issued by `verify-otp`, stored in Supabase `session_tokens` (2-hour expiry). Frontend stores token in sessionStorage as part of `hv_lead`.
+- **Dual experience:** `@workiva.com` emails get `WORKIVA_SELLER_SYSTEM_PROMPT`; all others get `SYSTEM_PROMPT`. Detection server-side from validated session email.
+- **Session storage keys:** `hv_lead` (leadId + email + sessionToken), `hv_admin` + `hv_admin_token` (admin auth).
+- **Company research cache:** `company_research` Supabase table keyed by normalized company name. Avoids redundant Claude API calls for previously researched companies.
+- **HV notification email:** Comma-separated `HV_NOTIFICATION_EMAIL` env var supports multiple recipients. Email includes company research, scoping summary with service pills, and full chat transcript.
 - **Email blocking:** `src/lib/blocked-domains.ts` blocks competitors, free email providers, etc. `workiva.com` is intentionally NOT blocked.
-- **Admin access:** OTP-gated, restricted to `@harborview-consulting.com` domain.
+- **Security headers:** `public/_headers` adds CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy.
+- **Admin console:** OTP-gated (`@harborview-consulting.com`). Onboarding guide, test profiles (prospect/seller/custom), quick-launch, simulate-completion with realistic per-service transcripts.
 
 ## Environment Variables
 
@@ -48,7 +58,11 @@ Backend (Netlify env / `.env`):
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
 - `CLAUDE_API_KEY`
 - `SES_REGION`, `SES_ACCESS_KEY_ID`, `SES_SECRET_ACCESS_KEY`, `AWS_SES_FROM_ADDRESS`
-- `HV_NOTIFICATION_EMAIL`
+- `HV_NOTIFICATION_EMAIL` — comma-separated for multiple recipients
+
+## Supabase Tables
+
+`leads`, `otp_tokens`, `chat_sessions`, `session_tokens`, `rate_limits`, `company_research`
 
 ## Tailwind Brand Colors
 
