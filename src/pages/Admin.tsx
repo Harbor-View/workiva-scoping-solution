@@ -188,8 +188,8 @@ export default function Admin() {
 
   // --- Admin console ---
 
-  function startSession(targetPage: string) {
-    const em = selectedProfile === "custom" ? customEmail : TEST_PROFILES[selectedProfile].email;
+  function startSession(targetPage: string, overrideEmail?: string) {
+    const em = overrideEmail ?? (selectedProfile === "custom" ? customEmail : TEST_PROFILES[selectedProfile].email);
     if (!em) return;
 
     sessionStorage.setItem(
@@ -291,6 +291,20 @@ export default function Admin() {
             </button>
             <button onClick={() => navigate("/verify")} className="bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold py-3 px-4 rounded-xl transition border border-gray-700">
               Verify OTP Page
+            </button>
+          </div>
+        </div>
+
+        {/* Workiva Seller Quick Launch */}
+        <div className="bg-gray-900 border border-purple-500/30 rounded-xl p-5 mb-6">
+          <h2 className="text-sm font-semibold text-purple-400 uppercase tracking-wider mb-3">Workiva Seller Experience</h2>
+          <p className="text-xs text-gray-500 mb-4">Launches as testuser@workiva.com regardless of profile selection.</p>
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={() => startSession("/chat", "testuser@workiva.com")} className="bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold py-3 px-4 rounded-xl transition">
+              Seller Chat
+            </button>
+            <button onClick={() => startSession("/confirmation", "testuser@workiva.com")} className="bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold py-3 px-4 rounded-xl transition">
+              Seller Confirmation
             </button>
           </div>
         </div>
