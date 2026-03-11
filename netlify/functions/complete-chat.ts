@@ -1,7 +1,7 @@
 import type { Handler } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
-import { researchCompany, upsertHubSpotCompany, createHubSpotTranscriptNote } from "./lib/research-company";
+import { researchCompany, type CompanyResearch } from "./lib/research-company";
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -86,25 +86,12 @@ export const handler: Handler = async (event) => {
     return { statusCode: 500, body: JSON.stringify({ error: "Failed to save session" }) };
   }
 
-  // Research company and upsert to HubSpot (non-blocking — don't fail the whole flow)
-  let hubspotCompanyUrl = "";
+  // Research company (non-blocking — don't fail the whole flow)
+  let research: CompanyResearch | null = null;
   try {
-    const research = await researchCompany(payload.company_name, payload.industry);
-    const hubspotId = await upsertHubSpotCompany(research);
-
-    if (hubspotId) {
-      const portalId = process.env.HUBSPOT_PORTAL_ID ?? "48264605";
-      hubspotCompanyUrl = `https://app.hubspot.com/contacts/${portalId}/record/0-2/${hubspotId}`;
-      console.log(`HubSpot company upserted: ${hubspotId}`);
-
-      // Failsafe: immediately persist transcript as a note on the company record
-      const noteId = await createHubSpotTranscriptNote(hubspotId, transcript, lead?.email ?? "unknown", payload.company_name);
-      if (noteId) {
-        console.log(`HubSpot transcript note created: ${noteId}`);
-      }
-    }
+    research = await researchCompany(payload.company_name, payload.industry);
   } catch (err) {
-    console.error("Company research/HubSpot error (non-fatal):", err);
+    console.error("Company research error (non-fatal):", err);
   }
 
   // Send HV notification email
@@ -142,8 +129,23 @@ export const handler: Handler = async (event) => {
 <div class="card">
   <div class="badge">New Scoping Lead</div>
   <h1>${payload.company_name}</h1>
-  <p style="color:#686B70; margin: 0 0 ${hubspotCompanyUrl ? "12px" : "24px"};">${payload.industry}</p>
-  ${hubspotCompanyUrl ? `<a href="${hubspotCompanyUrl}" style="display:inline-flex; align-items:center; gap:6px; background:#F0F7FF; border-radius:8px; padding:10px 16px; margin-bottom:24px; font-size:12px; color:#079FE0; text-decoration:none; font-weight:600;">View Company Research in HubSpot &rarr;</a>` : ""}
+  <p style="color:#686B70; margin: 0 0 ${research ? "12px" : "24px"};">${payload.industry}</p>
+  ${research?.company_research ? `
+  <div style="background:#F0F7FF; border-radius:8px; padding:16px; margin-bottom:24px; font-size:13px; color:#002A4E; line-height:1.6;">
+    <strong style="display:block; margin-bottom:6px; font-size:11px; color:#079FE0; text-transform:uppercase; letter-spacing:0.5px;">Company Research</strong>
+    ${research.company_research}
+    <div style="margin-top:12px; padding-top:12px; border-top:1px solid #D1D3D4; font-size:12px; color:#686B70;">
+      ${[
+        research.website ? `<strong>Website:</strong> ${research.website}` : "",
+        research.city && research.state ? `<strong>HQ:</strong> ${research.city}, ${research.state}${research.country && research.country !== "United States" ? `, ${research.country}` : ""}` : "",
+        research.numberofemployees ? `<strong>Employees:</strong> ~${Number(research.numberofemployees).toLocaleString()}` : "",
+        research.annualrevenue ? `<strong>Revenue:</strong> ~$${(Number(research.annualrevenue) / 1_000_000).toFixed(0)}M` : "",
+        research.founded_year ? `<strong>Founded:</strong> ${research.founded_year}` : "",
+        research.is_public === "true" ? `<strong>Public company</strong>` : "",
+        research.linkedin_company_page ? `<a href="${research.linkedin_company_page}" style="color:#079FE0;">LinkedIn</a>` : "",
+      ].filter(Boolean).join(" &middot; ")}
+    </div>
+  </div>` : ""}
 
   <div class="fee">${payload.fee_range}</div>
 
