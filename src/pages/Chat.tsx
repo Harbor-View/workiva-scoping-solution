@@ -132,13 +132,11 @@ export default function Chat() {
         const payload = JSON.parse(match[1].trim()) as object;
         setDone(true);
         const finalMessages: Message[] = [...msgs, { role: "assistant", content: stripScopingTag(full) }];
-        const completeRes = await fetch("/.netlify/functions/complete-chat", {
+        await fetch("/.netlify/functions/complete-chat", {
           method: "POST",
           headers: authHeaders,
           body: JSON.stringify({ transcript: finalMessages, payload }),
         });
-        const { proposalSlug } = await completeRes.json() as { proposalSlug: string };
-        sessionStorage.setItem("hv_proposal_slug", proposalSlug);
 
         // Send transcript PDF in the background
         void fetch("/.netlify/functions/send-transcript", {

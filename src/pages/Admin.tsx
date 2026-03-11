@@ -241,32 +241,154 @@ export default function Admin() {
     );
   }
 
+  type Msg = { role: "user" | "assistant"; content: string };
+
+  function buildSimData(companyName: string, services: string[]) {
+    const primary = services[0];
+    const templates = services.map(
+      (s) => SERVICE_OPTIONS.find((o) => o.label === s)!.template
+    );
+
+    const transcripts: Record<string, { transcript: Msg[]; industry: string; duration: string; fee: string; complexity: string; notes: string; modules: string[] }> = {
+      "Workiva Health Check": {
+        industry: "Financial Services",
+        duration: "3–4 weeks",
+        fee: "$12,000 – $18,000",
+        complexity: "moderate",
+        notes: "Mid-size financial services firm with 3 years on Workiva. Multiple report owners with inconsistent workflows, some broken linked content, and no governance standards documented. Moderate complexity due to multi-entity structure and need for permissions audit.",
+        modules: ["Wdesk"],
+        transcript: [
+          { role: "assistant", content: `Hi there! Welcome to Harbor View Consulting's Workiva scoping tool. I'm here to learn about your needs so we can put together a personalized estimate.\n\nTo get started — what's your company name, and what brings you to us today?` },
+          { role: "user", content: `I'm with ${companyName}. We've been using Workiva for about 3 years now for our SEC filings, but honestly things have gotten a bit messy. We have multiple people building reports with no real standards, and we keep running into broken links and formatting issues. Someone mentioned a health check might help.` },
+          { role: "assistant", content: `That's a really common situation — after a few years of organic growth on the platform, things tend to drift. A Workiva Health Check is exactly the right starting point.\n\nCan you tell me a little more about your organization? What industry are you in, roughly how large is the company, and how many people are actively working in Workiva today?` },
+          { role: "user", content: `We're a financial services company, about 1,200 employees. I'd say we have around 15 people who touch Workiva regularly — some in accounting, some in FP&A, and a couple in legal.` },
+          { role: "assistant", content: `Got it — 15 active users across multiple departments is a good-sized footprint.\n\nA couple more questions: How many reports or documents do you currently maintain in Workiva? And are they mostly SEC filings, or do you also have internal reports, board decks, or other document types in there?` },
+          { role: "user", content: `We have our 10-K, 10-Q, proxy statement, and a couple of 8-Ks. Plus there are maybe 6–8 internal reports that various teams built over time. I think some of those are duplicates or outdated but nobody wants to delete anything.` },
+          { role: "assistant", content: `That's pretty typical — the fear of deleting something important is real! A health check would inventory all of that and help you clean house safely.\n\nWhat about your entity structure? Are you a single entity or multi-entity? And do you have any integrations pulling data into Workiva from other systems like an ERP?` },
+          { role: "user", content: `We're multi-entity — we have a parent company and 4 subsidiaries. We do have a data feed from Oracle into Workiva but I'm not sure anyone really manages it anymore. The person who set it up left about a year ago.` },
+          { role: "assistant", content: `That's a really important detail — orphaned integrations can cause data issues downstream. We'd definitely want to audit that Oracle connection as part of the health check.\n\nLast couple of questions: Does your team have any documented Workiva governance — things like naming conventions, folder structure standards, or a process for who reviews what? And is there a particular deadline driving this, like a filing date?` },
+          { role: "user", content: `No governance documentation at all — that's part of the problem. Everyone just does their own thing. No hard deadline, but we'd like to get it cleaned up before our next 10-K filing cycle, which kicks off in about 8 weeks.` },
+          { role: "assistant", content: `That's a great timeline — a health check typically takes 3–4 weeks, so we'd have you in good shape well before the 10-K cycle.\n\nI have everything I need to put together your estimate. Our team will review this and send you a personalized fee range within 24 hours. You'll hear from us soon!` },
+        ],
+      },
+      "Financial Reporting Implementation": {
+        industry: "Manufacturing",
+        duration: "12–16 weeks",
+        fee: "$85,000 – $130,000",
+        complexity: "complex",
+        notes: "Large manufacturer with 12 entities across 3 countries, migrating from legacy Certent system. Complex consolidation requirements, multi-currency (USD, EUR, GBP), tight Q1 2027 filing deadline, and need for ERP integration with SAP S/4HANA. Limited internal Workiva experience — will need significant training.",
+        modules: ["Wdesk", "Workiva Reporting"],
+        transcript: [
+          { role: "assistant", content: `Hi there! Welcome to Harbor View Consulting's Workiva scoping tool. I'm here to learn about your needs so we can put together a personalized estimate.\n\nTo get started — what's your company name, and what brings you to us today?` },
+          { role: "user", content: `Hi, I'm the VP of Financial Reporting at ${companyName}. We're a publicly traded manufacturer and we need to implement Workiva for our SEC financial reporting. We've been using Certent for years but we're migrating to Workiva.` },
+          { role: "assistant", content: `Welcome! Certent to Workiva is a migration path we've done many times — there are some real wins to be had in terms of workflow efficiency and collaboration.\n\nCan you give me a sense of the scope? How many entities are in your consolidation, and what are your primary filings — 10-K, 10-Q, proxy?` },
+          { role: "user", content: `We have 12 entities total — the parent plus 11 subs. 3 of those are international (UK, Germany, and France). Primary filings are 10-K, 10-Q, proxy, and we do about 4–5 8-Ks a year. We also need to think about our earnings release.` },
+          { role: "assistant", content: `That's a substantial footprint. The international entities add a layer of complexity with multi-currency considerations.\n\nWhat ERP system are you on, and are you planning to integrate it with Workiva for data feeds? Also, how does your consolidation process work today — is it handled in the ERP or in a separate tool like HFM or BPC?` },
+          { role: "user", content: `We're on SAP S/4HANA globally. We do our consolidation in SAP as well. We'd definitely want to set up a data feed from SAP into Workiva — right now with Certent we're doing a lot of manual data entry and copy-paste, which is a big reason we're switching.` },
+          { role: "assistant", content: `SAP integration with Workiva works well — we can set up automated data connections that eliminate most of that manual work. That's usually one of the biggest ROI drivers in these projects.\n\nHow large is your reporting team? Who will be the day-to-day users in Workiva, and do any of them have prior Workiva experience?` },
+          { role: "user", content: `The core reporting team is about 8 people — controllers, senior accountants, and our IR person for the earnings release. Nobody on the team has used Workiva before. We'll definitely need training as part of this. We also have an IT team of 3 who would manage the SAP integration once it's set up.` },
+          { role: "assistant", content: `Training is definitely part of what we'd scope in. With 8 core users who are net-new to Workiva, we'd want to make sure they're comfortable before the first live filing.\n\nSpeaking of timelines — when is your next 10-K filing? Is there a specific go-live date you're targeting?` },
+          { role: "user", content: `Our fiscal year ends December 31, so the 10-K is due late February. We'd ideally want to be live on Workiva for the Q1 2027 10-Q filing at the latest. So we need to be fully up and running by early April 2027.` },
+          { role: "assistant", content: `That gives us about a year, which is workable but we'd want to start soon to leave room for testing and dry runs.\n\nOne more question — are there any other complicating factors I should know about? Things like XBRL tagging requirements, custom financial statement layouts, or any audit firm requirements around the transition?` },
+          { role: "user", content: `Yes, we do our own XBRL tagging in-house currently. We'd want to move that into Workiva too. And our audit firm (PwC) wants to be looped in on the transition timeline. No unusual financial statement layouts though — pretty standard manufacturing disclosures.` },
+          { role: "assistant", content: `Perfect — XBRL in Workiva is much more streamlined than standalone tagging tools, so your team should appreciate that improvement.\n\nI have everything I need to put together your estimate. Our team will review this and send you a personalized fee range within 24 hours. Given the scope — 12 entities, multi-currency, SAP integration, XBRL, and full team training — this is a comprehensive engagement, but it's exactly the kind of project we specialize in. You'll hear from us soon!` },
+        ],
+      },
+      "ESG / Sustainability Reporting": {
+        industry: "Energy",
+        duration: "10–14 weeks",
+        fee: "$50,000 – $80,000",
+        complexity: "moderate",
+        notes: "Mid-size energy company building first formal ESG reporting program on Workiva. Needs CSRD and TCFD framework support, data collection across 8 facilities, and integration with existing emissions tracking spreadsheets. Moderate complexity — first-time ESG reporter but has executive sponsorship and a dedicated sustainability team of 4.",
+        modules: ["Wdesk", "Workiva ESG"],
+        transcript: [
+          { role: "assistant", content: `Hi there! Welcome to Harbor View Consulting's Workiva scoping tool. I'm here to learn about your needs so we can put together a personalized estimate.\n\nTo get started — what's your company name, and what brings you to us today?` },
+          { role: "user", content: `Hi, I'm the Director of Sustainability at ${companyName}. We're an energy company and we need to get serious about our ESG reporting. Our board is pushing us to publish a formal sustainability report, and we've purchased Workiva to do it.` },
+          { role: "assistant", content: `Great timing — ESG reporting is moving fast and getting the right infrastructure in place now will pay dividends. Workiva's ESG solution is purpose-built for exactly this.\n\nCan you tell me a bit more about where you are today? Have you published any sustainability reports before, or is this your first formal ESG disclosure?` },
+          { role: "user", content: `This is our first formal one. We've had a section on our website with some high-level sustainability info, but nothing structured or auditable. Our investors are asking for it and we're also looking at CSRD compliance since we have operations in Europe.` },
+          { role: "assistant", content: `First-time ESG reporting with CSRD requirements — that's a meaningful scope. Are you also looking at any other frameworks? TCFD, GRI, SASB? And do you know if your report will need any level of assurance or third-party verification?` },
+          { role: "user", content: `We're planning to align with TCFD and CSRD. Our auditors (Deloitte) have mentioned they'll want to do limited assurance on the climate-related disclosures starting next year. So yes, it needs to be auditable from the start.` },
+          { role: "assistant", content: `That's smart to build for auditability from day one — it's much easier than retrofitting later.\n\nTell me about your data landscape. Where is your ESG data coming from today? Things like emissions data, energy consumption, workforce metrics — is that in spreadsheets, a separate system, or scattered across the organization?` },
+          { role: "user", content: `Mostly spreadsheets, honestly. We have 8 facilities and each one tracks their own energy and emissions data in Excel. Workforce data comes from our HRIS (Workday). Water usage is tracked by our operations team in another spreadsheet. It's pretty fragmented.` },
+          { role: "assistant", content: `That's very common for companies at this stage. One of the big wins with Workiva is centralizing all of that data collection with proper audit trails.\n\nHow large is your sustainability team? And do you have executive sponsorship for this initiative — a C-suite champion who's driving it?` },
+          { role: "user", content: `I have a team of 4, including myself. Our CFO is the executive sponsor — she's the one who got board approval for the Workiva purchase. We also have a cross-functional working group with people from operations, HR, legal, and investor relations.` },
+          { role: "assistant", content: `That's a really strong setup — executive sponsorship from the CFO and a cross-functional team. That makes a big difference in these projects.\n\nLast question — what's your target timeline? When do you need the first report published?` },
+          { role: "user", content: `We're targeting publication in Q3 2027, covering calendar year 2026 data. So we need the Workiva platform configured and data collection processes in place well before that — ideally by Q1 2027 so we have a full quarter to collect and validate data.` },
+          { role: "assistant", content: `That's a very achievable timeline. Starting implementation now gives us plenty of runway to get the platform configured, data collection workflows built, and your team trained before the Q1 data collection period.\n\nI have everything I need to put together your estimate. Our team will review this and send you a personalized fee range within 24 hours. You'll hear from us soon!` },
+        ],
+      },
+      "SOX / Internal Controls": {
+        industry: "Technology",
+        duration: "14–18 weeks",
+        fee: "$100,000 – $150,000",
+        complexity: "complex",
+        notes: "Fast-growing tech company recently IPO'd, building SOX compliance program from scratch on Workiva. 200+ controls across 6 business processes, multiple IT general controls for SaaS environment (AWS, Salesforce, NetSuite). Complex due to first-year SOX, limited internal audit team, aggressive timeline for first 404(b) audit, and need for ITGC coverage across cloud infrastructure.",
+        modules: ["Wdesk", "Workiva SOX"],
+        transcript: [
+          { role: "assistant", content: `Hi there! Welcome to Harbor View Consulting's Workiva scoping tool. I'm here to learn about your needs so we can put together a personalized estimate.\n\nTo get started — what's your company name, and what brings you to us today?` },
+          { role: "user", content: `Hey, I'm the VP of Internal Audit at ${companyName}. We're a tech company that IPO'd about 8 months ago and we need to build out our SOX compliance program. We bought Workiva to manage it but we need help getting everything set up.` },
+          { role: "assistant", content: `Congratulations on the IPO! Building a SOX program post-IPO is a critical milestone, and Workiva is a great platform for it.\n\nCan you tell me where you are in the process? Have you already identified your in-scope processes and controls, or are you starting from scratch?` },
+          { role: "user", content: `We're pretty early. Our external auditors (EY) helped us do a risk assessment and identify the in-scope processes. We've got about 200+ controls identified across 6 major business processes — revenue, procure-to-pay, financial close, payroll, treasury, and IT. But none of it is documented in Workiva yet.` },
+          { role: "assistant", content: `200+ controls across 6 processes is a meaningful scope, but it's in line with what we typically see for a company your stage.\n\nTell me about the IT side — what's your technology environment? What ERP, CRM, and infrastructure are we dealing with? IT general controls tend to be a big piece of first-year SOX.` },
+          { role: "user", content: `We're a cloud-native company. NetSuite for ERP, Salesforce for CRM, AWS for infrastructure, and we have about 15 other SaaS tools that touch financial data in some way — things like Stripe for billing, Expensify, Brex for corporate cards. Our ITGC scope is going to be significant.` },
+          { role: "assistant", content: `That's a complex ITGC environment — 15+ applications with financial data means a lot of access reviews, change management controls, and SOD analysis.\n\nHow large is your internal audit team? And are you planning to do testing in-house, outsource it, or a combination? Also, are you going straight to a 404(b) integrated audit, or doing 404(a) management assessment only first?` },
+          { role: "user", content: `My team is small — just me and two senior auditors. We'll do some testing in-house but we'll definitely need to co-source some of the testing. We're going straight to 404(b) — our audit committee and EY are aligned on that. First audit period ends December 31, 2026.` },
+          { role: "assistant", content: `Straight to 404(b) with a December year-end — that means you need everything documented, tested, and remediated well before year-end. That's an aggressive but doable timeline.\n\nA couple more questions: Are there any known control deficiencies or material weaknesses that EY flagged during the risk assessment? And does your team have any experience with Workiva specifically?` },
+          { role: "user", content: `EY flagged a few areas of concern around segregation of duties in NetSuite and lack of formal change management for our AWS environment. No material weaknesses formally identified yet but those are the risk areas. And no, nobody on my team has used Workiva before — we're coming from a spreadsheet-and-SharePoint approach.` },
+          { role: "assistant", content: `Those are very common findings for post-IPO tech companies. We can help you design controls to address the SOD and change management gaps as part of the implementation.\n\nLast question — beyond the core SOX program in Workiva, are you looking at any additional capabilities? Things like continuous monitoring, automated evidence collection, or integration with your GRC tool if you have one?` },
+          { role: "user", content: `We don't have a separate GRC tool — we're hoping Workiva can be our single platform for all of this. Automated evidence collection would be huge for us given our small team. And we'd want to set up dashboards so I can report testing status to the audit committee each quarter.` },
+          { role: "assistant", content: `Workiva can absolutely serve as your central SOX platform with dashboards and status reporting. Great fit for a lean team.\n\nI have everything I need to put together your estimate. Given the scope — first-year 404(b), 200+ controls, complex ITGC environment, team training, and the December deadline — this is a comprehensive engagement. Our team will review this and send you a personalized fee range within 24 hours. You'll hear from us soon!` },
+        ],
+      },
+      "FP&A / Management Reporting": {
+        industry: "Healthcare",
+        duration: "8–12 weeks",
+        fee: "$45,000 – $70,000",
+        complexity: "moderate",
+        notes: "Regional healthcare system with 5 hospitals consolidating management reporting onto Workiva. Currently using a patchwork of Excel models and legacy Hyperion reports. Need monthly board deck, departmental P&Ls, and KPI dashboards. Moderate complexity — straightforward reporting needs but multiple data sources (Epic, PeopleSoft, Kronos) and 20+ report consumers across executive leadership.",
+        modules: ["Wdesk", "Workiva Reporting"],
+        transcript: [
+          { role: "assistant", content: `Hi there! Welcome to Harbor View Consulting's Workiva scoping tool. I'm here to learn about your needs so we can put together a personalized estimate.\n\nTo get started — what's your company name, and what brings you to us today?` },
+          { role: "user", content: `Hi, I'm the Senior Director of FP&A at ${companyName}. We're a regional healthcare system and we need help implementing Workiva for our management reporting. Right now our reporting is a mess — spreadsheets everywhere, nothing centralized.` },
+          { role: "assistant", content: `I hear that a lot — especially in healthcare where there are so many stakeholders needing different cuts of the same data. Workiva is great for centralizing and standardizing management reporting.\n\nCan you tell me more about your organization? How many facilities or entities are in your system, and what does your current reporting look like?` },
+          { role: "user", content: `We have 5 hospitals, a physician group, and a corporate entity. Right now each hospital has its own set of Excel reports. The CFO gets a monthly board deck that my team manually assembles from all of these — it takes us about 2 weeks each month. We also produce departmental P&Ls for about 40 cost centers.` },
+          { role: "assistant", content: `Two weeks to assemble the board deck — that's a huge amount of time that Workiva can dramatically reduce. And 40 departmental P&Ls is meaningful volume.\n\nWhat systems does the data come from? What's your ERP, and are there other source systems for clinical or operational metrics?` },
+          { role: "user", content: `PeopleSoft is our ERP for financials. We use Epic for clinical data — things like patient volumes, case mix index, length of stay. Kronos for labor and staffing metrics. And honestly there are probably 5–6 other departmental spreadsheets that feed into various reports.` },
+          { role: "assistant", content: `Three major source systems plus departmental spreadsheets — that's a typical healthcare data landscape. We'd want to set up data connections for at least PeopleSoft and potentially Epic, with a structured process for the manual data inputs.\n\nWho are the primary consumers of these reports? And what's the current approval or review workflow before reports go to the board?` },
+          { role: "user", content: `The board gets the monthly deck. Each hospital CEO and CFO gets their facility-specific reports. Department heads get their P&Ls. So maybe 20–25 people total who consume reports. For the board deck, it goes through me, then our system CFO reviews, then the CEO signs off. It's all done via email with track changes right now.` },
+          { role: "assistant", content: `Workiva's review workflow will be a huge improvement over the email-and-track-changes approach — built-in review cycles, comments, and sign-offs.\n\nHow large is your FP&A team? And do you have any IT support available for setting up the data integrations?` },
+          { role: "user", content: `My team is 6 people — 4 financial analysts, a manager, and me. We have an IT team but they're stretched thin. They could help with initial integration setup but we'd need the consultant to lead it. Oh, and we'd also love to build some KPI dashboards in Workiva if that's possible — things like revenue per adjusted patient day, labor cost trends, that kind of thing.` },
+          { role: "assistant", content: `Dashboards are definitely possible in Workiva — and really valuable for healthcare KPI tracking. We'd scope those as part of the engagement.\n\nLast question — what's your timeline? Is there a board meeting or fiscal year milestone you're targeting for go-live?` },
+          { role: "user", content: `Our fiscal year starts July 1, so ideally we'd be live for the August board meeting — that would be the first month-end close on the new platform. So we need to be ready by late July 2027.` },
+          { role: "assistant", content: `That gives us good runway. An 8–12 week implementation starting in the spring would have you ready well before that July cutover.\n\nI have everything I need to put together your estimate. Our team will review this and send you a personalized fee range within 24 hours. You'll hear from us soon!` },
+        ],
+      },
+    };
+
+    const data = transcripts[primary] ?? transcripts["Workiva Health Check"];
+
+    return {
+      transcript: data.transcript,
+      payload: {
+        services,
+        company_name: companyName,
+        industry: data.industry,
+        project_duration: data.duration,
+        fee_range: data.fee,
+        complexity_tier: data.complexity,
+        complexity_notes: data.notes,
+        modules: data.modules,
+        templates_to_use: templates,
+      },
+    };
+  }
+
   async function handleSimulateCompletion() {
     if (!simCompany.trim() || simServices.length === 0) return;
     setSimLoading(true);
     setSimResult(null);
 
-    const companyName = simCompany.trim();
-    const templates = simServices.map(
-      (s) => SERVICE_OPTIONS.find((o) => o.label === s)!.template
-    );
-
-    const payload = {
-      services: simServices,
-      company_name: companyName,
-      industry: "Unknown (admin test)",
-      project_duration: "TBD",
-      fee_range: "TBD — admin simulation",
-      complexity_tier: "medium",
-      complexity_notes: "Simulated from admin console for testing purposes.",
-      modules: [],
-      templates_to_use: templates,
-    };
-
-    const transcript = [
-      { role: "user" as const, content: `[Admin simulation] Company: ${companyName}, Services: ${simServices.join(", ")}` },
-      { role: "assistant" as const, content: "This is a simulated chat completion triggered from the admin console." },
-    ];
+    const { transcript, payload } = buildSimData(simCompany.trim(), simServices);
 
     try {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -286,10 +408,10 @@ export default function Admin() {
         return;
       }
 
-      const data = await res.json() as { proposalSlug: string; proposalPassword: string };
+      await res.json();
       setSimResult({
         status: "success",
-        message: `Slug: ${data.proposalSlug} · Password: ${data.proposalPassword}`,
+        message: `Notification email sent for ${simCompany.trim()}`,
       });
     } catch {
       setSimResult({ status: "error", message: "Network error" });

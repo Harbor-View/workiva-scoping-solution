@@ -59,16 +59,11 @@ export const handler: Handler = async (event) => {
   // Use leadId from validated session, not from client
   const leadId = session.leadId;
 
-  // Generate proposal slug from company name
+  // Generate proposal slug from company name (stored for future Phase 4 use)
   const proposalSlug = `${payload.company_name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "")}-workiva`;
-
-  // Generate password matching proposal system convention: {companyname}2026
-  const proposalPassword = `${payload.company_name.toLowerCase().replace(/[^a-z0-9]/g, "")}2026`;
-
-  const proposalUrl = `https://proposals.harborview-consulting.com/${proposalSlug}`;
 
   // Fetch lead email
   const { data: lead } = await supabase
@@ -114,8 +109,6 @@ export const handler: Handler = async (event) => {
     complexity: esc(payload.complexity_tier),
     notes: esc(payload.complexity_notes),
     email: esc(lead?.email ?? "unknown"),
-    proposalUrl: escUrl(proposalUrl),
-    proposalPassword: esc(proposalPassword),
   };
 
   // Escape research fields
@@ -198,14 +191,7 @@ export const handler: Handler = async (event) => {
     ${e.notes}
   </div>
 
-  <div style="background: #002A4E; border-radius: 8px; padding: 16px; margin-bottom: 24px; color: white;">
-    <strong style="display:block; margin-bottom:8px; font-size: 13px;">Proposal Credentials</strong>
-    <div style="font-size: 13px; margin-bottom: 4px;">URL: <a href="${e.proposalUrl}" style="color: #079FE0;">${e.proposalUrl}</a></div>
-    <div style="font-size: 13px;">Password: <code style="background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 4px; font-family: monospace;">${e.proposalPassword}</code></div>
-  </div>
-
-  <a href="${e.proposalUrl}" class="btn">Review &amp; Edit Proposal →</a>
-  <a href="mailto:${e.email}?subject=Your Workiva implementation estimate from Harbor View Consulting" class="btn-outline">Send Estimate to Prospect</a>
+  <a href="mailto:${e.email}?subject=Your Workiva implementation estimate from Harbor View Consulting" class="btn">Send Estimate to Prospect →</a>
 
   <div class="footer">
     This lead came through the Workiva Scoping Agent.<br />
@@ -225,6 +211,6 @@ export const handler: Handler = async (event) => {
 
   return {
     statusCode: 200,
-    body: JSON.stringify({ proposalSlug, proposalPassword }),
+    body: JSON.stringify({ success: true }),
   };
 };
