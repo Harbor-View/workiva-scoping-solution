@@ -2,6 +2,8 @@ import type { Handler } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { researchCompany, type CompanyResearch } from "./lib/research-company";
+import { validateSession } from "./lib/auth";
+import { esc, escUrl, sanitizeSubject } from "./lib/html-escape";
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -38,16 +40,24 @@ export const handler: Handler = async (event) => {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
-  let leadId: string, transcript: Message[], payload: ScopingPayload;
+  // Validate session
+  const session = await validateSession(event, supabase);
+  if (!session) {
+    return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
+  }
+
+  let transcript: Message[], payload: ScopingPayload;
   try {
-    ({ leadId, transcript, payload } = JSON.parse(event.body ?? "{}") as {
-      leadId: string;
+    ({ transcript, payload } = JSON.parse(event.body ?? "{}") as {
       transcript: Message[];
       payload: ScopingPayload;
     });
   } catch {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid request body" }) };
   }
+
+  // Use leadId from validated session, not from client
+  const leadId = session.leadId;
 
   // Generate proposal slug from company name
   const proposalSlug = `${payload.company_name
@@ -94,6 +104,35 @@ export const handler: Handler = async (event) => {
     console.error("Company research error (non-fatal):", err);
   }
 
+  // Escape all user-supplied values for HTML email
+  const e = {
+    companyName: esc(payload.company_name),
+    industry: esc(payload.industry),
+    feeRange: esc(payload.fee_range),
+    services: esc(payload.services.join(", ")),
+    duration: esc(payload.project_duration),
+    complexity: esc(payload.complexity_tier),
+    notes: esc(payload.complexity_notes),
+    email: esc(lead?.email ?? "unknown"),
+    proposalUrl: escUrl(proposalUrl),
+    proposalPassword: esc(proposalPassword),
+  };
+
+  // Escape research fields
+  const r = research ? {
+    research: esc(research.company_research ?? ""),
+    website: research.website ? escUrl(research.website) : "",
+    websiteDisplay: research.website ? esc(research.website) : "",
+    city: esc(research.city ?? ""),
+    state: esc(research.state ?? ""),
+    country: esc(research.country ?? ""),
+    employees: research.numberofemployees ? esc(Number(research.numberofemployees).toLocaleString()) : "",
+    revenue: research.annualrevenue ? esc(`~$${(Number(research.annualrevenue) / 1_000_000).toFixed(0)}M`) : "",
+    founded: esc(research.founded_year ?? ""),
+    isPublic: research.is_public === "true",
+    linkedin: research.linkedin_company_page ? escUrl(research.linkedin_company_page) : "",
+  } : null;
+
   // Send HV notification email
   await ses.send(
     new SendEmailCommand({
@@ -101,7 +140,7 @@ export const handler: Handler = async (event) => {
       Destination: { ToAddresses: [process.env.HV_NOTIFICATION_EMAIL!] },
       Message: {
         Subject: {
-          Data: `New Workiva scoping: ${payload.company_name} — ${payload.fee_range}`,
+          Data: sanitizeSubject(`New Workiva scoping: ${payload.company_name} — ${payload.fee_range}`),
         },
         Body: {
           Html: {
@@ -128,45 +167,45 @@ export const handler: Handler = async (event) => {
 <body>
 <div class="card">
   <div class="badge">New Scoping Lead</div>
-  <h1>${payload.company_name}</h1>
-  <p style="color:#686B70; margin: 0 0 ${research ? "12px" : "24px"};">${payload.industry}</p>
-  ${research?.company_research ? `
+  <h1>${e.companyName}</h1>
+  <p style="color:#686B70; margin: 0 0 ${r?.research ? "12px" : "24px"};">${e.industry}</p>
+  ${r?.research ? `
   <div style="background:#F0F7FF; border-radius:8px; padding:16px; margin-bottom:24px; font-size:13px; color:#002A4E; line-height:1.6;">
     <strong style="display:block; margin-bottom:6px; font-size:11px; color:#079FE0; text-transform:uppercase; letter-spacing:0.5px;">Company Research</strong>
-    ${research.company_research}
+    ${r.research}
     <div style="margin-top:12px; padding-top:12px; border-top:1px solid #D1D3D4; font-size:12px; color:#686B70;">
       ${[
-        research.website ? `<strong>Website:</strong> ${research.website}` : "",
-        research.city && research.state ? `<strong>HQ:</strong> ${research.city}, ${research.state}${research.country && research.country !== "United States" ? `, ${research.country}` : ""}` : "",
-        research.numberofemployees ? `<strong>Employees:</strong> ~${Number(research.numberofemployees).toLocaleString()}` : "",
-        research.annualrevenue ? `<strong>Revenue:</strong> ~$${(Number(research.annualrevenue) / 1_000_000).toFixed(0)}M` : "",
-        research.founded_year ? `<strong>Founded:</strong> ${research.founded_year}` : "",
-        research.is_public === "true" ? `<strong>Public company</strong>` : "",
-        research.linkedin_company_page ? `<a href="${research.linkedin_company_page}" style="color:#079FE0;">LinkedIn</a>` : "",
+        r.website ? `<strong>Website:</strong> <a href="${r.website}" style="color:#079FE0;">${r.websiteDisplay}</a>` : "",
+        r.city && r.state ? `<strong>HQ:</strong> ${r.city}, ${r.state}${r.country && r.country !== "United States" ? `, ${r.country}` : ""}` : "",
+        r.employees ? `<strong>Employees:</strong> ~${r.employees}` : "",
+        r.revenue ? `<strong>Revenue:</strong> ${r.revenue}` : "",
+        r.founded ? `<strong>Founded:</strong> ${r.founded}` : "",
+        r.isPublic ? `<strong>Public company</strong>` : "",
+        r.linkedin ? `<a href="${r.linkedin}" style="color:#079FE0;">LinkedIn</a>` : "",
       ].filter(Boolean).join(" &middot; ")}
     </div>
   </div>` : ""}
 
-  <div class="fee">${payload.fee_range}</div>
+  <div class="fee">${e.feeRange}</div>
 
-  <div class="row"><span class="label">Services</span><span class="value">${payload.services.join(", ")}</span></div>
-  <div class="row"><span class="label">Duration</span><span class="value">${payload.project_duration}</span></div>
-  <div class="row"><span class="label">Complexity</span><span class="value" style="text-transform: capitalize;">${payload.complexity_tier}</span></div>
-  <div class="row"><span class="label">Prospect email</span><span class="value">${lead?.email ?? "unknown"}</span></div>
+  <div class="row"><span class="label">Services</span><span class="value">${e.services}</span></div>
+  <div class="row"><span class="label">Duration</span><span class="value">${e.duration}</span></div>
+  <div class="row"><span class="label">Complexity</span><span class="value" style="text-transform: capitalize;">${e.complexity}</span></div>
+  <div class="row"><span class="label">Prospect email</span><span class="value">${e.email}</span></div>
 
   <div class="notes" style="margin-top: 24px;">
     <strong style="color:#002A4E; display:block; margin-bottom:6px;">Rationale</strong>
-    ${payload.complexity_notes}
+    ${e.notes}
   </div>
 
   <div style="background: #002A4E; border-radius: 8px; padding: 16px; margin-bottom: 24px; color: white;">
     <strong style="display:block; margin-bottom:8px; font-size: 13px;">Proposal Credentials</strong>
-    <div style="font-size: 13px; margin-bottom: 4px;">URL: <a href="${proposalUrl}" style="color: #079FE0;">${proposalUrl}</a></div>
-    <div style="font-size: 13px;">Password: <code style="background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 4px; font-family: monospace;">${proposalPassword}</code></div>
+    <div style="font-size: 13px; margin-bottom: 4px;">URL: <a href="${e.proposalUrl}" style="color: #079FE0;">${e.proposalUrl}</a></div>
+    <div style="font-size: 13px;">Password: <code style="background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 4px; font-family: monospace;">${e.proposalPassword}</code></div>
   </div>
 
-  <a href="${proposalUrl}" class="btn">Review &amp; Edit Proposal →</a>
-  <a href="mailto:${lead?.email ?? ""}?subject=Your Workiva implementation estimate from Harbor View Consulting" class="btn-outline">Send Estimate to Prospect</a>
+  <a href="${e.proposalUrl}" class="btn">Review &amp; Edit Proposal →</a>
+  <a href="mailto:${e.email}?subject=Your Workiva implementation estimate from Harbor View Consulting" class="btn-outline">Send Estimate to Prospect</a>
 
   <div class="footer">
     This lead came through the Workiva Scoping Agent.<br />

@@ -1,7 +1,9 @@
 import type { Handler } from "@netlify/functions";
+import { randomInt } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { BLOCKED_DOMAINS } from "../../src/lib/blocked-domains";
+import { checkRateLimit } from "./lib/rate-limit";
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -40,7 +42,13 @@ export const handler: Handler = async (event) => {
     };
   }
 
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  // Rate limit: max 5 OTP sends per email per hour
+  const { allowed } = await checkRateLimit(supabase, `send-otp:${email.toLowerCase()}`, 5, 60);
+  if (!allowed) {
+    return { statusCode: 429, body: JSON.stringify({ error: "Too many requests. Please try again later." }) };
+  }
+
+  const code = randomInt(100000, 999999).toString();
   const expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
   const { error: dbError } = await supabase

@@ -1,6 +1,13 @@
 import type { Handler } from "@netlify/functions";
+import { createClient } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
 import { SYSTEM_PROMPT, WORKIVA_SELLER_SYSTEM_PROMPT } from "./lib/system-prompt";
+import { validateSession } from "./lib/auth";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
 
@@ -14,14 +21,21 @@ export const handler: Handler = async (event) => {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
+  // Validate session
+  const session = await validateSession(event, supabase);
+  if (!session) {
+    return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
+  }
+
   let messages: Message[];
-  let isWorkivaSeller = false;
   try {
-    ({ messages, isWorkivaSeller } = JSON.parse(event.body ?? "{}") as { messages: Message[]; isWorkivaSeller?: boolean });
-    isWorkivaSeller = isWorkivaSeller ?? false;
+    ({ messages } = JSON.parse(event.body ?? "{}") as { messages: Message[] });
   } catch {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid request body" }) };
   }
+
+  // Determine seller status server-side from validated email
+  const isWorkivaSeller = session.email.endsWith("@workiva.com");
 
   // Claude API requires at least one message with role "user"
   const apiMessages = messages.length === 0

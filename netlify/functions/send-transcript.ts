@@ -1,6 +1,14 @@
 import type { Handler } from "@netlify/functions";
+import { createClient } from "@supabase/supabase-js";
 import { SESClient, SendRawEmailCommand } from "@aws-sdk/client-ses";
 import PDFDocument from "pdfkit";
+import { validateSession } from "./lib/auth";
+import { esc } from "./lib/html-escape";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 const ses = new SESClient({
   region: process.env.SES_REGION ?? "us-east-1",
@@ -123,25 +131,35 @@ export const handler: Handler = async (event) => {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
-  let transcript: Message[], prospectEmail: string, skipped: boolean;
+  // Validate session
+  const session = await validateSession(event, supabase);
+  if (!session) {
+    return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
+  }
+
+  // Use email from validated session
+  const prospectEmail = session.email;
+
+  let transcript: Message[], skipped: boolean;
   try {
-    ({ transcript, prospectEmail, skipped } = JSON.parse(event.body ?? "{}") as {
+    ({ transcript, skipped } = JSON.parse(event.body ?? "{}") as {
       transcript: Message[];
-      prospectEmail: string;
       skipped: boolean;
     });
   } catch {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid request body" }) };
   }
 
-  if (!transcript?.length || !prospectEmail) {
-    return { statusCode: 400, body: JSON.stringify({ error: "Missing transcript or email" }) };
+  if (!transcript?.length) {
+    return { statusCode: 400, body: JSON.stringify({ error: "Missing transcript" }) };
   }
 
   const pdfBuffer = await generatePdf(transcript, prospectEmail);
 
   const date = new Date().toISOString().slice(0, 10);
   const pdfFilename = `workiva-scoping-transcript-${date}.pdf`;
+
+  const escapedEmail = esc(prospectEmail);
 
   const subject = skipped
     ? `Workiva Scoping — Prospect skipped to scheduling (${prospectEmail})`
@@ -156,8 +174,8 @@ export const handler: Handler = async (event) => {
     <h2 style="color: #002A4E; margin: 0 0 8px;">Scoping Chat Transcript</h2>
     <p style="color: #686B70; margin: 0 0 16px; font-size: 14px;">
       ${skipped
-        ? `The prospect (${prospectEmail}) skipped the scoping chat and went directly to meeting scheduling. A partial transcript is attached.`
-        : `The scoping chat with ${prospectEmail} has been completed. Full transcript is attached as a PDF.`
+        ? `The prospect (${escapedEmail}) skipped the scoping chat and went directly to meeting scheduling. A partial transcript is attached.`
+        : `The scoping chat with ${escapedEmail} has been completed. Full transcript is attached as a PDF.`
       }
     </p>
     <p style="color: #686B70; font-size: 13px; margin: 0;">

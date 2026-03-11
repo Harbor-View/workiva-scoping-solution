@@ -24,6 +24,7 @@ export default function Admin() {
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Admin state
+  const [adminToken, setAdminToken] = useState(() => sessionStorage.getItem("hv_admin_token") ?? "");
   const [selectedProfile, setSelectedProfile] = useState<ProfileKey>("prospect");
   const [customEmail, setCustomEmail] = useState("");
 
@@ -85,7 +86,12 @@ export default function Admin() {
         otpRefs.current[0]?.focus();
         return;
       }
+      const data = await res.json() as { sessionToken?: string };
       sessionStorage.setItem("hv_admin", "1");
+      if (data.sessionToken) {
+        sessionStorage.setItem("hv_admin_token", data.sessionToken);
+        setAdminToken(data.sessionToken);
+      }
       setAuthed(true);
     } catch {
       setAuthError("Network error — try again");
@@ -213,6 +219,8 @@ export default function Admin() {
 
   function logout() {
     sessionStorage.removeItem("hv_admin");
+    sessionStorage.removeItem("hv_admin_token");
+    setAdminToken("");
     setAuthed(false);
     setOtpSent(false);
     setOtp(["", "", "", "", "", ""]);
@@ -261,11 +269,12 @@ export default function Admin() {
     ];
 
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (adminToken) headers["Authorization"] = `Bearer ${adminToken}`;
       const res = await fetch("/.netlify/functions/complete-chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
-          leadId: `admin-test-${Date.now()}`,
           transcript,
           payload,
         }),

@@ -12,6 +12,7 @@ interface Message {
 interface LeadSession {
   leadId: string;
   email: string;
+  sessionToken?: string;
 }
 
 const SCOPING_COMPLETE_RE = /<SCOPING_COMPLETE>([\s\S]*?)<\/SCOPING_COMPLETE>/;
@@ -61,10 +62,12 @@ export default function Chat() {
   function handleSkip() {
     const nonEmptyMessages = messages.filter((m) => m.content !== "");
     if (nonEmptyMessages.length > 0 && lead) {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (lead.sessionToken) headers["Authorization"] = `Bearer ${lead.sessionToken}`;
       void fetch("/.netlify/functions/send-transcript", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcript: nonEmptyMessages, prospectEmail: lead.email, skipped: true }),
+        headers,
+        body: JSON.stringify({ transcript: nonEmptyMessages, skipped: true }),
       });
     }
     navigate("/confirmation");
@@ -93,14 +96,17 @@ export default function Chat() {
   const sendToClaudeWithMessages = useCallback(async (msgs: Message[]) => {
     setStreaming(true);
 
+    const authHeaders: Record<string, string> = { "Content-Type": "application/json" };
+    if (lead?.sessionToken) authHeaders["Authorization"] = `Bearer ${lead.sessionToken}`;
+
     // Append a placeholder for the assistant response
     setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
     try {
       const res = await fetch("/.netlify/functions/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: msgs, isWorkivaSeller: lead?.email?.endsWith("@workiva.com") }),
+        headers: authHeaders,
+        body: JSON.stringify({ messages: msgs }),
       });
 
       if (!res.ok) {
@@ -128,8 +134,8 @@ export default function Chat() {
         const finalMessages: Message[] = [...msgs, { role: "assistant", content: stripScopingTag(full) }];
         const completeRes = await fetch("/.netlify/functions/complete-chat", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ leadId: lead?.leadId, transcript: finalMessages, payload }),
+          headers: authHeaders,
+          body: JSON.stringify({ transcript: finalMessages, payload }),
         });
         const { proposalSlug } = await completeRes.json() as { proposalSlug: string };
         sessionStorage.setItem("hv_proposal_slug", proposalSlug);
@@ -137,8 +143,8 @@ export default function Chat() {
         // Send transcript PDF in the background
         void fetch("/.netlify/functions/send-transcript", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ transcript: finalMessages, prospectEmail: lead?.email, skipped: false }),
+          headers: authHeaders,
+          body: JSON.stringify({ transcript: finalMessages, skipped: false }),
         });
 
         setTimeout(() => navigate("/confirmation"), 1500);

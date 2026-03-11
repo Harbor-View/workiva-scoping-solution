@@ -65,14 +65,14 @@ export default function Verify() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code }),
       });
-      const data = await res.json() as { leadId?: string; email?: string; error?: string };
+      const data = await res.json() as { leadId?: string; email?: string; sessionToken?: string; error?: string };
       if (!res.ok) {
         setError(data.error ?? "Invalid code. Please try again.");
         setDigits(["", "", "", "", "", ""]);
         inputs.current[0]?.focus();
         return;
       }
-      sessionStorage.setItem("hv_lead", JSON.stringify({ leadId: data.leadId, email: data.email }));
+      sessionStorage.setItem("hv_lead", JSON.stringify({ leadId: data.leadId, email: data.email, sessionToken: data.sessionToken }));
       navigate("/chat");
     } catch {
       setError("Network error. Please try again.");
