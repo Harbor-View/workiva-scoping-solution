@@ -27,6 +27,12 @@ export default function Admin() {
   const [selectedProfile, setSelectedProfile] = useState<ProfileKey>("prospect");
   const [customEmail, setCustomEmail] = useState("");
 
+  // Simulate completion state
+  const [simCompany, setSimCompany] = useState("");
+  const [simServices, setSimServices] = useState<string[]>([]);
+  const [simLoading, setSimLoading] = useState(false);
+  const [simResult, setSimResult] = useState<{ status: "success" | "error"; message: string } | null>(null);
+
   const currentSession = sessionStorage.getItem("hv_lead");
   const parsedSession = currentSession ? JSON.parse(currentSession) : null;
 
@@ -213,6 +219,76 @@ export default function Admin() {
     setEmail("");
   }
 
+  const SERVICE_OPTIONS = [
+    { label: "Workiva Health Check", template: "health-check" },
+    { label: "Financial Reporting Implementation", template: "financial-reporting" },
+    { label: "ESG / Sustainability Reporting", template: "esg" },
+    { label: "SOX / Internal Controls", template: "sox" },
+    { label: "FP&A / Management Reporting", template: "fpa" },
+  ];
+
+  function toggleService(label: string) {
+    setSimServices((prev) =>
+      prev.includes(label) ? prev.filter((s) => s !== label) : [...prev, label]
+    );
+  }
+
+  async function handleSimulateCompletion() {
+    if (!simCompany.trim() || simServices.length === 0) return;
+    setSimLoading(true);
+    setSimResult(null);
+
+    const companyName = simCompany.trim();
+    const templates = simServices.map(
+      (s) => SERVICE_OPTIONS.find((o) => o.label === s)!.template
+    );
+
+    const payload = {
+      services: simServices,
+      company_name: companyName,
+      industry: "Unknown (admin test)",
+      project_duration: "TBD",
+      fee_range: "TBD — admin simulation",
+      complexity_tier: "medium",
+      complexity_notes: "Simulated from admin console for testing purposes.",
+      modules: [],
+      templates_to_use: templates,
+    };
+
+    const transcript = [
+      { role: "user" as const, content: `[Admin simulation] Company: ${companyName}, Services: ${simServices.join(", ")}` },
+      { role: "assistant" as const, content: "This is a simulated chat completion triggered from the admin console." },
+    ];
+
+    try {
+      const res = await fetch("/.netlify/functions/complete-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leadId: `admin-test-${Date.now()}`,
+          transcript,
+          payload,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setSimResult({ status: "error", message: data.error ?? `Failed (${res.status})` });
+        return;
+      }
+
+      const data = await res.json() as { proposalSlug: string; proposalPassword: string };
+      setSimResult({
+        status: "success",
+        message: `Slug: ${data.proposalSlug} · Password: ${data.proposalPassword}`,
+      });
+    } catch {
+      setSimResult({ status: "error", message: "Network error" });
+    } finally {
+      setSimLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 text-white p-8">
       <div className="max-w-2xl mx-auto">
@@ -307,6 +383,55 @@ export default function Admin() {
               Seller Confirmation
             </button>
           </div>
+        </div>
+
+        {/* Simulate Chat Completion */}
+        <div className="bg-gray-900 border border-amber-500/30 rounded-xl p-5 mb-6">
+          <h2 className="text-sm font-semibold text-amber-400 uppercase tracking-wider mb-1">Simulate Chat Completion</h2>
+          <p className="text-xs text-gray-500 mb-4">Calls complete-chat as if a scoping chat just finished. Triggers company research, notification email, and transcript PDF.</p>
+
+          <input
+            type="text"
+            value={simCompany}
+            onChange={(e) => { setSimCompany(e.target.value); setSimResult(null); }}
+            placeholder="Company name (e.g. Acme Corp)"
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-amber-500/50 mb-3"
+          />
+
+          <p className="text-xs text-gray-500 mb-2">Select service(s):</p>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {SERVICE_OPTIONS.map((svc) => (
+              <button
+                key={svc.label}
+                onClick={() => toggleService(svc.label)}
+                className={`text-xs px-3 py-1.5 rounded-full border transition ${
+                  simServices.includes(svc.label)
+                    ? "bg-amber-500 border-amber-500 text-white"
+                    : "border-gray-600 text-gray-400 hover:border-gray-500 hover:text-gray-300"
+                }`}
+              >
+                {svc.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => { void handleSimulateCompletion(); }}
+            disabled={simLoading || !simCompany.trim() || simServices.length === 0}
+            className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-gray-950 text-sm font-semibold py-3 rounded-xl transition"
+          >
+            {simLoading ? "Running..." : "Fire complete-chat"}
+          </button>
+
+          {simResult && (
+            <div className={`mt-3 text-xs p-3 rounded-lg ${
+              simResult.status === "success"
+                ? "bg-green-500/10 border border-green-500/30 text-green-400"
+                : "bg-red-500/10 border border-red-500/30 text-red-400"
+            }`}>
+              {simResult.status === "success" ? "OK — " : "Error — "}{simResult.message}
+            </div>
+          )}
         </div>
 
         {/* Direct Links */}

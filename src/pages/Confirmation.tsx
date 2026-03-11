@@ -175,10 +175,10 @@ export default function Confirmation() {
                   </div>
 
                   {/* Workiva Day CTA */}
-                  <div className="bg-gradient-to-br from-hv-yellow/10 to-hv-yellow/5 rounded-2xl border border-hv-yellow/20 p-5">
+                  <div className="bg-gradient-to-br from-[#8DC63F]/10 to-[#8DC63F]/5 rounded-2xl border border-[#8DC63F]/20 p-5">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-xl bg-hv-yellow/20 flex items-center justify-center">
-                        <GraduationCap className="w-5 h-5 text-hv-yellow" />
+                      <div className="w-10 h-10 rounded-xl bg-[#8DC63F]/20 flex items-center justify-center">
+                        <GraduationCap className="w-5 h-5 text-[#8DC63F]" />
                       </div>
                       <h3 className="text-sm font-bold text-hv-navy leading-tight">
                         Host a "Workiva Day"<br />with Your Client
@@ -188,7 +188,7 @@ export default function Confirmation() {
                       We'll help you get onsite with your customers by offering <strong className="text-hv-navy">free CPE-accredited training</strong> as part of a "Workiva Day." Deepen the relationship, showcase platform value, and drive expansion — all while your client earns continuing education credits.
                     </p>
                     <a
-                      href="mailto:mmolloy@harborview-consulting.com?subject=Workiva%20Day%20—%20Let's%20Plan%20One"
+                      href="mailto:kcollingsworth@harborview-consulting.com?subject=Workiva%20Day%20—%20Let's%20Plan%20One"
                       className="block w-full text-center bg-hv-navy hover:bg-hv-navy/90 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition"
                     >
                       Let's Plan a Workiva Day
