@@ -84,7 +84,7 @@ const HOW_IT_WORKS = [
   {
     icon: MessageSquare,
     step: "01",
-    title: "Answer smart questions",
+    title: "Answer a few questions",
     description: "Our AI chat asks 8–12 targeted questions about your Workiva needs, current setup, and goals. Takes about 5 minutes.",
   },
   {
@@ -206,7 +206,7 @@ export default function Landing() {
             </h1>
 
             <p className="text-xl text-white/80 mb-10 leading-relaxed">
-              Skip the weeks of back-and-forth. Answer a few smart questions and receive
+              Skip the weeks of back-and-forth. Answer a few targeted questions and receive
               a personalized, expert-reviewed fee range — before your first meeting
               with our team.
             </p>
