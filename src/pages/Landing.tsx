@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { isCorporateEmail } from "@/lib/blocked-domains";
 import {
-  CheckCircle,
   Clock,
   Bot,
   Users,
@@ -18,28 +17,43 @@ import {
   Phone,
   Mail,
   MapPin,
+  BarChart3,
+  Database,
+  Shield,
+  Leaf,
+  type LucideIcon,
 } from "lucide-react";
 
-const SERVICES = [
+const SERVICES: { title: string; description: string; icon: LucideIcon; accent: string }[] = [
   {
     title: "Financial Reporting",
     description: "Streamline your financial reporting process with automated workflows, linked data, and audit-ready controls.",
+    icon: FileText,
+    accent: "from-hv-blue to-[#065a9e]",
   },
   {
     title: "Management Reporting",
     description: "Create dynamic management reports with real-time data integration across your organization.",
+    icon: BarChart3,
+    accent: "from-hv-mint to-[#2a9474]",
   },
   {
     title: "Connectivity (Wdata)",
     description: "Seamless data integration and transformation using Workiva's Wdata platform.",
+    icon: Database,
+    accent: "from-[#8b5cf6] to-[#6d28d9]",
   },
   {
     title: "SOX / Internal Controls",
     description: "Governance, Risk, and Compliance management — structured around Workiva's GRC framework.",
+    icon: Shield,
+    accent: "from-hv-yellow to-[#d4a03c]",
   },
   {
     title: "ESG Reporting",
     description: "Environmental, Social, and Governance reporting built on Workiva's purpose-built ESG platform.",
+    icon: Leaf,
+    accent: "from-hv-mint to-[#2a9474]",
   },
 ];
 
@@ -234,40 +248,60 @@ export default function Landing() {
       </section>
 
       {/* Services */}
-      <section className="bg-hv-white py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold text-hv-navy mb-3">Workiva Services</h2>
-            <p className="text-hv-slate max-w-xl mx-auto">
+      <section className="relative bg-hv-white py-24 overflow-hidden">
+        {/* Subtle background pattern */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,_#079FE008_0%,_transparent_50%),_radial-gradient(circle_at_80%_20%,_#3AB79508_0%,_transparent_50%)]" />
+        <div className="relative z-10 max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <span className="text-hv-blue text-sm font-semibold uppercase tracking-widest mb-3 block">What we deliver</span>
+            <h2 className="text-4xl font-bold text-hv-navy mb-4">Workiva Services</h2>
+            <p className="text-hv-slate max-w-lg mx-auto text-lg">
               We scope and deliver across the full Workiva platform.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {SERVICES.map((service, i) => (
+          {/* Top row — 3 cards */}
+          <div className="grid md:grid-cols-3 gap-6 mb-6">
+            {SERVICES.slice(0, 3).map((service) => (
               <div
                 key={service.title}
-                className="relative p-6 rounded-2xl bg-white border border-hv-border hover:border-hv-blue hover:shadow-lg transition-all duration-200 group overflow-hidden"
+                className="relative rounded-2xl bg-white border border-hv-border hover:shadow-xl transition-all duration-300 group overflow-hidden"
               >
-                {/* Accent bar */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-hv-blue to-hv-blue/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-t-2xl" />
-                {/* Step number watermark */}
-                <div className="absolute bottom-4 right-4 text-6xl font-black text-hv-navy/5 select-none leading-none">
-                  {String(i + 1).padStart(2, "0")}
+                {/* Top gradient bar */}
+                <div className={`h-1.5 bg-gradient-to-r ${service.accent}`} />
+                <div className="p-7">
+                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${service.accent} flex items-center justify-center mb-5 shadow-sm group-hover:scale-105 transition-transform duration-300`}>
+                    <service.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-hv-navy mb-2">{service.title}</h3>
+                  <p className="text-hv-slate text-sm leading-relaxed">{service.description}</p>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-hv-blue/10 flex items-center justify-center mb-4 group-hover:bg-hv-blue/20 transition-colors">
-                  <CheckCircle className="w-5 h-5 text-hv-blue" />
-                </div>
-                <h3 className="text-lg font-bold text-hv-navy mb-2">{service.title}</h3>
-                <p className="text-hv-slate text-sm leading-relaxed">{service.description}</p>
               </div>
             ))}
           </div>
-          <div className="text-center mt-10">
+          {/* Bottom row — 2 cards, centered */}
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {SERVICES.slice(3).map((service) => (
+              <div
+                key={service.title}
+                className="relative rounded-2xl bg-white border border-hv-border hover:shadow-xl transition-all duration-300 group overflow-hidden"
+              >
+                <div className={`h-1.5 bg-gradient-to-r ${service.accent}`} />
+                <div className="p-7">
+                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${service.accent} flex items-center justify-center mb-5 shadow-sm group-hover:scale-105 transition-transform duration-300`}>
+                    <service.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-hv-navy mb-2">{service.title}</h3>
+                  <p className="text-hv-slate text-sm leading-relaxed">{service.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-12">
             <a
               href="https://www.harborview-consulting.com/services/workiva"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-hv-blue font-semibold hover:underline text-sm"
+              className="inline-flex items-center gap-2 text-hv-blue font-semibold hover:underline"
             >
               View all Workiva services on harborview-consulting.com <ArrowRight className="w-4 h-4" />
             </a>
