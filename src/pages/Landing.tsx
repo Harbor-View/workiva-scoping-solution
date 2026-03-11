@@ -265,28 +265,8 @@ export default function Landing() {
               We scope and deliver across the full Workiva platform.
             </p>
           </div>
-          {/* Top row — 3 cards */}
-          <div className="grid md:grid-cols-3 gap-6 mb-6">
-            {SERVICES.slice(0, 3).map((service) => (
-              <div
-                key={service.title}
-                className="relative rounded-2xl bg-white border border-hv-border hover:shadow-xl transition-all duration-300 group overflow-hidden"
-              >
-                {/* Top gradient bar */}
-                <div className={`h-1.5 bg-gradient-to-r ${service.accent}`} />
-                <div className="p-7">
-                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${service.accent} flex items-center justify-center mb-5 shadow-sm group-hover:scale-105 transition-transform duration-300`}>
-                    <service.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-lg font-bold text-hv-navy mb-2">{service.title}</h3>
-                  <p className="text-hv-slate text-sm leading-relaxed">{service.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          {/* Bottom row — 2 cards, centered */}
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {SERVICES.slice(3).map((service) => (
+          <div className="grid md:grid-cols-3 gap-6">
+            {SERVICES.map((service) => (
               <div
                 key={service.title}
                 className="relative rounded-2xl bg-white border border-hv-border hover:shadow-xl transition-all duration-300 group overflow-hidden"
