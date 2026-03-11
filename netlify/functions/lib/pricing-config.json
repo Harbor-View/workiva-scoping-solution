@@ -1,0 +1,36 @@
+{
+  "services": [
+    {
+      "name": "Workiva Health Check",
+      "simple": "$8,000 – $12,000",
+      "moderate": "$12,000 – $18,000",
+      "complex": "$18,000 – $25,000"
+    },
+    {
+      "name": "Financial Reporting Implementation",
+      "simple": "$35,000 – $55,000",
+      "moderate": "$55,000 – $85,000",
+      "complex": "$85,000 – $130,000"
+    },
+    {
+      "name": "ESG / Sustainability Reporting",
+      "simple": "$30,000 – $50,000",
+      "moderate": "$50,000 – $80,000",
+      "complex": "$80,000 – $120,000"
+    },
+    {
+      "name": "SOX / Internal Controls",
+      "simple": "$40,000 – $65,000",
+      "moderate": "$65,000 – $100,000",
+      "complex": "$100,000 – $150,000"
+    },
+    {
+      "name": "FP&A / Management Reporting",
+      "simple": "$25,000 – $45,000",
+      "moderate": "$45,000 – $70,000",
+      "complex": "$70,000 – $110,000"
+    }
+  ],
+  "bundleRule": "Add 80% of each additional service's base range",
+  "complexityDrivers": "number of entities, custom integrations, data volume, tight deadlines, limited internal resources, regulatory complexity"
+}
