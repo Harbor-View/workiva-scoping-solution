@@ -15,6 +15,11 @@ export interface CompanyResearch {
   country: string;
   description: string;
   website: string;
+  about_us: string;
+  founded_year: string;
+  linkedin_company_page: string;
+  is_public: string;
+  company_research: string;
 }
 
 export async function researchCompany(companyName: string, industry: string): Promise<CompanyResearch> {
@@ -36,8 +41,13 @@ Return ONLY valid JSON with these fields:
   "city": "headquarters city",
   "state": "headquarters state/province",
   "country": "headquarters country",
-  "description": "2-3 sentence description: what the company does, how long they've been in business, how they make money, and any notable recent events",
-  "website": "full website URL (e.g. https://acme.com)"
+  "description": "One sentence mission/goals statement",
+  "about_us": "Short about-company blurb (2-3 sentences)",
+  "founded_year": "Year company was founded (e.g. '1998'), empty if unknown",
+  "linkedin_company_page": "LinkedIn company page URL, empty if unknown",
+  "is_public": "true or false — whether the company is publicly traded",
+  "website": "full website URL (e.g. https://acme.com)",
+  "company_research": "Detailed research paragraph (4-6 sentences): what the company does, how they make money, how long they've been in business, approximate size and revenue, headquarters location, industry position, any notable recent events or developments, and why they might need Workiva services"
 }`,
       },
     ],
@@ -62,6 +72,11 @@ Return ONLY valid JSON with these fields:
       country: "",
       description: "",
       website: "",
+      about_us: "",
+      founded_year: "",
+      linkedin_company_page: "",
+      is_public: "",
+      company_research: "",
     };
   }
 
@@ -115,6 +130,11 @@ export async function upsertHubSpotCompany(research: CompanyResearch): Promise<s
   if (research.state) properties.state = research.state;
   if (research.country) properties.country = research.country;
   if (research.website) properties.website = research.website;
+  if (research.about_us) properties.about_us = research.about_us;
+  if (research.founded_year) properties.founded_year = research.founded_year;
+  if (research.linkedin_company_page) properties.linkedin_company_page = research.linkedin_company_page;
+  if (research.is_public) properties.is_public = research.is_public;
+  if (research.company_research) properties.company_research = research.company_research;
 
   if (searchData.results?.length > 0) {
     // Update existing

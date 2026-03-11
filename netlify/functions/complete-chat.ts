@@ -87,20 +87,14 @@ export const handler: Handler = async (event) => {
   }
 
   // Research company and upsert to HubSpot (non-blocking — don't fail the whole flow)
-  let companyResearch = "";
+  let hubspotCompanyUrl = "";
   try {
     const research = await researchCompany(payload.company_name, payload.industry);
     const hubspotId = await upsertHubSpotCompany(research);
 
-    const parts: string[] = [];
-    if (research.description) parts.push(research.description);
-    if (research.city && research.state) parts.push(`HQ: ${research.city}, ${research.state}${research.country && research.country !== "United States" ? `, ${research.country}` : ""}`);
-    if (research.numberofemployees) parts.push(`~${Number(research.numberofemployees).toLocaleString()} employees`);
-    if (research.annualrevenue) parts.push(`~$${(Number(research.annualrevenue) / 1_000_000).toFixed(0)}M revenue`);
-    if (research.website) parts.push(research.website);
-    companyResearch = parts.join(" · ");
-
     if (hubspotId) {
+      const portalId = process.env.HUBSPOT_PORTAL_ID ?? "48264605";
+      hubspotCompanyUrl = `https://app.hubspot.com/contacts/${portalId}/record/0-2/${hubspotId}`;
       console.log(`HubSpot company upserted: ${hubspotId}`);
     }
   } catch (err) {
@@ -142,8 +136,8 @@ export const handler: Handler = async (event) => {
 <div class="card">
   <div class="badge">New Scoping Lead</div>
   <h1>${payload.company_name}</h1>
-  <p style="color:#686B70; margin: 0 0 ${companyResearch ? "12px" : "24px"};">${payload.industry}</p>
-  ${companyResearch ? `<div style="background:#F0F7FF; border-radius:8px; padding:12px 16px; margin-bottom:24px; font-size:12px; color:#002A4E; line-height:1.6;"><strong style="display:block; margin-bottom:4px; font-size:11px; color:#079FE0; text-transform:uppercase; letter-spacing:0.5px;">Company Intel</strong>${companyResearch}</div>` : ""}
+  <p style="color:#686B70; margin: 0 0 ${hubspotCompanyUrl ? "12px" : "24px"};">${payload.industry}</p>
+  ${hubspotCompanyUrl ? `<a href="${hubspotCompanyUrl}" style="display:inline-flex; align-items:center; gap:6px; background:#F0F7FF; border-radius:8px; padding:10px 16px; margin-bottom:24px; font-size:12px; color:#079FE0; text-decoration:none; font-weight:600;">View Company Research in HubSpot &rarr;</a>` : ""}
 
   <div class="fee">${payload.fee_range}</div>
 
