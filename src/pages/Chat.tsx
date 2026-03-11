@@ -16,12 +16,19 @@ interface LeadSession {
 
 const SCOPING_COMPLETE_RE = /<SCOPING_COMPLETE>([\s\S]*?)<\/SCOPING_COMPLETE>/;
 
-const QUICK_REPLIES = [
+const PROSPECT_QUICK_REPLIES = [
   "SEC / Financial Reporting",
   "SOX Compliance",
   "Sustainability Reporting",
   "Management Reporting",
   "Not sure yet",
+];
+
+const SELLER_QUICK_REPLIES = [
+  "New logo — net-new customer",
+  "Expansion — existing customer",
+  "Let me paste my Salesforce notes",
+  "Health check for a current customer",
 ];
 
 const STEPS = ["Verify Email", "Scoping Chat", "Your Estimate"] as const;
@@ -43,6 +50,8 @@ export default function Chat() {
   const hasUserReplied = messages.some((m) => m.role === "user");
   const firstAssistantReady = messages.some((m) => m.role === "assistant" && m.content !== "");
   const currentStep = done ? 2 : 1;
+  const isWorkivaSeller = lead?.email?.endsWith("@workiva.com") ?? false;
+  const quickReplies = isWorkivaSeller ? SELLER_QUICK_REPLIES : PROSPECT_QUICK_REPLIES;
 
   function handleQuickReply(text: string) {
     setInput(text);
@@ -91,7 +100,7 @@ export default function Chat() {
       const res = await fetch("/.netlify/functions/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: msgs }),
+        body: JSON.stringify({ messages: msgs, isWorkivaSeller: lead?.email?.endsWith("@workiva.com") }),
       });
 
       if (!res.ok) {
@@ -235,14 +244,18 @@ export default function Chat() {
           {/* Intro Card — shown until first assistant message is ready */}
           {!firstAssistantReady && (
             <div className="bg-gradient-to-br from-hv-navy to-hv-navy/90 rounded-2xl p-5 text-white">
-              <h2 className="text-base font-bold mb-1">Welcome to Workiva Scoping</h2>
+              <h2 className="text-base font-bold mb-1">
+                {isWorkivaSeller ? "Workiva Seller — Partner Scoping" : "Welcome to Workiva Scoping"}
+              </h2>
               <p className="text-sm text-white/80 leading-relaxed">
-                This takes about 5 minutes. We'll ask about your reporting needs, team size, and timeline to build a personalized implementation estimate.
+                {isWorkivaSeller
+                  ? "Tell us about your customer opportunity. We'll ask about the deal stage, existing Workiva footprint, and what you're looking to sell. Feel free to paste in Salesforce notes — the more context, the better the estimate."
+                  : "This takes about 5 minutes. We'll ask about your reporting needs, team size, and timeline to build a personalized implementation estimate."}
               </p>
               <div className="flex gap-4 mt-3 text-xs text-white/60">
                 <span>~5 min</span>
-                <span>Estimate within 24 hrs</span>
-                <span>No commitment</span>
+                <span>{isWorkivaSeller ? "Client-facing proposal within 24 hrs" : "Estimate within 24 hrs"}</span>
+                <span>{isWorkivaSeller ? "Proposal addressed to your customer" : "No commitment"}</span>
               </div>
             </div>
           )}
@@ -296,7 +309,7 @@ export default function Chat() {
           <div className="max-w-2xl mx-auto mb-3">
             <p className="text-[11px] text-hv-slate mb-1.5">Quick replies:</p>
             <div className="flex flex-wrap gap-2">
-              {QUICK_REPLIES.map((reply) => (
+              {quickReplies.map((reply) => (
                 <button
                   key={reply}
                   onClick={() => handleQuickReply(reply)}

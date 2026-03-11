@@ -1,6 +1,6 @@
 import type { Handler } from "@netlify/functions";
 import Anthropic from "@anthropic-ai/sdk";
-import { SYSTEM_PROMPT } from "./lib/system-prompt";
+import { SYSTEM_PROMPT, WORKIVA_SELLER_SYSTEM_PROMPT } from "./lib/system-prompt";
 
 const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
 
@@ -15,21 +15,28 @@ export const handler: Handler = async (event) => {
   }
 
   let messages: Message[];
+  let isWorkivaSeller = false;
   try {
-    ({ messages } = JSON.parse(event.body ?? "{}") as { messages: Message[] });
+    ({ messages, isWorkivaSeller } = JSON.parse(event.body ?? "{}") as { messages: Message[]; isWorkivaSeller?: boolean });
+    isWorkivaSeller = isWorkivaSeller ?? false;
   } catch {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid request body" }) };
   }
 
   // Claude API requires at least one message with role "user"
   const apiMessages = messages.length === 0
-    ? [{ role: "user" as const, content: "Hi, I'd like to get a Workiva implementation estimate." }]
+    ? [{
+        role: "user" as const,
+        content: isWorkivaSeller
+          ? "Hi, I'm a Workiva seller and I'd like to submit a scoping request for one of my customers."
+          : "Hi, I'd like to get a Workiva implementation estimate.",
+      }]
     : messages;
 
   const response = await anthropic.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 1024,
-    system: SYSTEM_PROMPT,
+    system: isWorkivaSeller ? WORKIVA_SELLER_SYSTEM_PROMPT : SYSTEM_PROMPT,
     messages: apiMessages,
   });
 
