@@ -132,7 +132,7 @@ export const handler: Handler = async (event) => {
   await ses.send(
     new SendEmailCommand({
       Source: process.env.AWS_SES_FROM_ADDRESS!,
-      Destination: { ToAddresses: [process.env.HV_NOTIFICATION_EMAIL!] },
+      Destination: { ToAddresses: process.env.HV_NOTIFICATION_EMAIL!.split(",").map((e) => e.trim()) },
       Message: {
         Subject: {
           Data: sanitizeSubject(`New Workiva scoping: ${payload.company_name} — ${payload.fee_range}`),

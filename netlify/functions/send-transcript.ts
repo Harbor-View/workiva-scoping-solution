@@ -187,7 +187,7 @@ export const handler: Handler = async (event) => {
 </html>`;
 
   const fromAddress = process.env.AWS_SES_FROM_ADDRESS!;
-  const toAddress = process.env.HV_NOTIFICATION_EMAIL!;
+  const toAddress = process.env.HV_NOTIFICATION_EMAIL!.split(",").map((e) => e.trim()).join(", ");
   const rawEmail = buildRawEmail(fromAddress, toAddress, subject, htmlBody, pdfBuffer, pdfFilename);
 
   await ses.send(
