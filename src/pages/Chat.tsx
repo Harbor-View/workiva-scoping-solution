@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { CheckCircle2, Shield } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
@@ -12,6 +13,16 @@ interface LeadSession {
 }
 
 const SCOPING_COMPLETE_RE = /<SCOPING_COMPLETE>([\s\S]*?)<\/SCOPING_COMPLETE>/;
+
+const QUICK_REPLIES = [
+  "SEC / Financial Reporting",
+  "SOX Compliance",
+  "Sustainability Reporting",
+  "Management Reporting",
+  "Not sure yet",
+];
+
+const STEPS = ["Verify Email", "Scoping Chat", "Your Estimate"] as const;
 
 function stripScopingTag(text: string): string {
   return text.replace(/<SCOPING_COMPLETE>[\s\S]*?<\/SCOPING_COMPLETE>/, "").trim();
@@ -26,6 +37,16 @@ export default function Chat() {
   const [lead, setLead] = useState<LeadSession | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const hasUserReplied = messages.some((m) => m.role === "user");
+  const firstAssistantReady = messages.some((m) => m.role === "assistant" && m.content !== "");
+  const currentStep = done ? 2 : 1;
+
+  function handleQuickReply(text: string) {
+    setInput(text);
+    // Focus the textarea so user can edit or just hit enter
+    textareaRef.current?.focus();
+  }
 
   // Auth guard
   useEffect(() => {
@@ -126,10 +147,41 @@ export default function Chat() {
   return (
     <div className="min-h-screen bg-hv-white flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b border-hv-border px-6 py-4 sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <span className="text-hv-navy font-bold tracking-wide">Harbor View Consulting</span>
-          <span className="text-xs text-hv-slate">Workiva Scoping</span>
+      <header className="bg-white border-b border-hv-border px-6 py-3 sticky top-0 z-10">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center justify-between">
+            <span className="text-hv-navy font-bold tracking-wide">Harbor View Consulting</span>
+            <div className="flex items-center gap-1.5 text-hv-mint">
+              <Shield className="w-3.5 h-3.5" />
+              <span className="text-[11px] font-semibold">Registered Workiva Partner</span>
+            </div>
+          </div>
+          {/* Progress Steps */}
+          <div className="flex items-center gap-2 mt-2">
+            {STEPS.map((step, i) => (
+              <div key={step} className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  {i < currentStep ? (
+                    <CheckCircle2 className="w-4 h-4 text-hv-mint" />
+                  ) : i === currentStep ? (
+                    <div className="w-4 h-4 rounded-full border-2 border-hv-blue flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-hv-blue" />
+                    </div>
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2 border-hv-border" />
+                  )}
+                  <span className={`text-[11px] font-medium ${
+                    i < currentStep ? "text-hv-mint" : i === currentStep ? "text-hv-navy" : "text-hv-slate"
+                  }`}>
+                    {step}
+                  </span>
+                </div>
+                {i < STEPS.length - 1 && (
+                  <div className={`w-8 h-px ${i < currentStep ? "bg-hv-mint" : "bg-hv-border"}`} />
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -159,6 +211,21 @@ export default function Chat() {
       {/* Messages */}
       <main className="flex-1 overflow-y-auto px-4 py-6">
         <div className="max-w-2xl mx-auto space-y-4">
+          {/* Intro Card — shown until first assistant message is ready */}
+          {!firstAssistantReady && (
+            <div className="bg-gradient-to-br from-hv-navy to-hv-navy/90 rounded-2xl p-5 text-white">
+              <h2 className="text-base font-bold mb-1">Welcome to Workiva Scoping</h2>
+              <p className="text-sm text-white/80 leading-relaxed">
+                This takes about 5 minutes. We'll ask about your reporting needs, team size, and timeline to build a personalized implementation estimate.
+              </p>
+              <div className="flex gap-4 mt-3 text-xs text-white/60">
+                <span>~5 min</span>
+                <span>Estimate within 24 hrs</span>
+                <span>No commitment</span>
+              </div>
+            </div>
+          )}
+
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               {msg.role === "assistant" && (
@@ -199,6 +266,24 @@ export default function Chat() {
 
       {/* Input */}
       <div className="bg-white border-t border-hv-border px-4 py-4">
+        {/* Quick Reply Chips — shown after first assistant message, before user has replied */}
+        {firstAssistantReady && !hasUserReplied && !done && (
+          <div className="max-w-2xl mx-auto mb-3">
+            <p className="text-[11px] text-hv-slate mb-1.5">Quick replies:</p>
+            <div className="flex flex-wrap gap-2">
+              {QUICK_REPLIES.map((reply) => (
+                <button
+                  key={reply}
+                  onClick={() => handleQuickReply(reply)}
+                  disabled={streaming}
+                  className="text-xs px-3 py-1.5 rounded-full border border-hv-blue/30 text-hv-blue hover:bg-hv-blue hover:text-white transition disabled:opacity-40"
+                >
+                  {reply}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="max-w-2xl mx-auto flex gap-3 items-end">
           <textarea
             ref={textareaRef}
