@@ -1,7 +1,7 @@
 import type { Handler } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
-import { researchCompany, upsertHubSpotCompany } from "./lib/research-company";
+import { researchCompany, upsertHubSpotCompany, createHubSpotTranscriptNote } from "./lib/research-company";
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -96,6 +96,12 @@ export const handler: Handler = async (event) => {
       const portalId = process.env.HUBSPOT_PORTAL_ID ?? "48264605";
       hubspotCompanyUrl = `https://app.hubspot.com/contacts/${portalId}/record/0-2/${hubspotId}`;
       console.log(`HubSpot company upserted: ${hubspotId}`);
+
+      // Failsafe: immediately persist transcript as a note on the company record
+      const noteId = await createHubSpotTranscriptNote(hubspotId, transcript, lead?.email ?? "unknown", payload.company_name);
+      if (noteId) {
+        console.log(`HubSpot transcript note created: ${noteId}`);
+      }
     }
   } catch (err) {
     console.error("Company research/HubSpot error (non-fatal):", err);

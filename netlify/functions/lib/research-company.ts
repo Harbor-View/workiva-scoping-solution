@@ -3,6 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
 
 const HUBSPOT_API = "https://api.hubapi.com/crm/v3/objects/companies";
+const HUBSPOT_NOTES_API = "https://api.hubapi.com/crm/v3/objects/notes";
+const HUBSPOT_ASSOC_API = "https://api.hubapi.com/crm/v4/objects/notes";
 
 export interface CompanyResearch {
   name: string;
@@ -155,4 +157,70 @@ export async function upsertHubSpotCompany(research: CompanyResearch): Promise<s
     const created = (await createRes.json()) as { id: string };
     return created.id;
   }
+}
+
+interface TranscriptMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export async function createHubSpotTranscriptNote(
+  companyId: string,
+  transcript: TranscriptMessage[],
+  prospectEmail: string,
+  companyName: string,
+): Promise<string | null> {
+  const token = process.env.HUBSPOT_TOKEN;
+  if (!token) return null;
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+  };
+
+  const date = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+  // Build HTML transcript
+  const messagesHtml = transcript
+    .map((msg) => {
+      const label = msg.role === "assistant" ? "Harbor View" : "Prospect";
+      const color = msg.role === "assistant" ? "#002A4E" : "#079FE0";
+      const escaped = msg.content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+      return `<p style="margin:0 0 12px;"><strong style="color:${color};">${label}:</strong><br>${escaped}</p>`;
+    })
+    .join("");
+
+  const noteBody = `
+<h3 style="color:#002A4E; margin:0 0 4px;">Workiva Scoping Chat Transcript</h3>
+<p style="color:#686B70; font-size:13px; margin:0 0 16px;">${companyName} &middot; ${prospectEmail} &middot; ${date}</p>
+<hr style="border:none; border-top:1px solid #D1D3D4; margin:0 0 16px;">
+${messagesHtml}
+<hr style="border:none; border-top:1px solid #D1D3D4; margin:16px 0;">
+<p style="color:#686B70; font-size:11px;">Captured by the Harbor View Workiva Scoping Agent</p>`;
+
+  // Create the note
+  const noteRes = await fetch(HUBSPOT_NOTES_API, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      properties: {
+        hs_note_body: noteBody,
+        hs_timestamp: new Date().toISOString(),
+      },
+    }),
+  });
+
+  const noteData = (await noteRes.json()) as { id: string };
+  if (!noteData.id) return null;
+
+  // Associate note with company
+  await fetch(`${HUBSPOT_ASSOC_API}/${noteData.id}/associations/companies/${companyId}`, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify([
+      { associationCategory: "HUBSPOT_DEFINED", associationTypeId: 190 },
+    ]),
+  });
+
+  return noteData.id;
 }
