@@ -13,7 +13,7 @@ AI-powered scoping tool for [Harbor View Consulting](https://harborview-consulti
 5. **Estimate generated** — Claude emits a structured JSON payload with services, fee range, complexity tier, and recommended modules
 6. **HVC notified** — Email with AI-generated company research, scoping summary, fee range, and the full chat transcript
 7. **Transcript PDF** — Branded PDF generated via PDFKit and sent as an SES attachment
-8. **Prospect confirmation** — Meeting scheduling via HubSpot embed, contact info for the HVC team
+8. **Prospect confirmation** — Meeting scheduling via HubSpot embed, contact info for the HVC team. Prospects who skip the chat see a tailored screen prompting them to return or reach out directly
 
 ### Workiva Seller Flow
 

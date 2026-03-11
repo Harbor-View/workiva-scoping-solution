@@ -17,7 +17,7 @@ Workiva Scoping Solution for Harbor View Consulting — an AI-powered chat that 
 
 **Frontend:** React 19 + Vite + Tailwind CSS + TypeScript. SPA with react-router-dom.
 
-**Routes:** `/` (Landing) → `/verify` (OTP email gate) → `/chat` (AI scoping) → `/confirmation` (meeting scheduling). `/admin` is an OTP-secured test console for HVC staff.
+**Routes:** `/` (Landing) → `/verify` (OTP email gate) → `/chat` (AI scoping) → `/confirmation` (meeting scheduling / skip landing). `/admin` is an OTP-secured test console for HVC staff.
 
 **Backend:** Netlify Functions (serverless, esbuild-bundled) in `netlify/functions/`.
 
@@ -41,6 +41,7 @@ Workiva Scoping Solution for Harbor View Consulting — an AI-powered chat that 
 ## Key Patterns
 
 - **`<SCOPING_COMPLETE>` tag:** Claude emits `<SCOPING_COMPLETE>{JSON}</SCOPING_COMPLETE>` when scoping is done. Chat.tsx parses this to trigger `complete-chat` and strips it from display.
+- **Skip flow:** Prospects can skip the scoping chat. Chat.tsx navigates to `/confirmation` with `{ state: { skipped: true } }`. Confirmation.tsx renders a different card prompting them to return to chat, email the team, or book a meeting.
 - **Session token auth:** All protected endpoints require `Authorization: Bearer <token>`. Tokens issued by `verify-otp`, stored in Supabase `session_tokens` (2-hour expiry). Frontend stores token in sessionStorage as part of `hv_lead`.
 - **Dual experience:** `@workiva.com` emails get `WORKIVA_SELLER_SYSTEM_PROMPT`; all others get `SYSTEM_PROMPT`. Detection server-side from validated session email.
 - **Session storage keys:** `hv_lead` (leadId + email + sessionToken), `hv_admin` + `hv_admin_token` (admin auth).
