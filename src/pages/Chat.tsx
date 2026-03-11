@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, Shield } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   role: "user" | "assistant";
@@ -234,13 +236,17 @@ export default function Chat() {
                 </div>
               )}
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                   msg.role === "user"
-                    ? "bg-hv-blue text-white rounded-br-sm"
-                    : "bg-white border border-hv-border text-hv-navy rounded-bl-sm"
+                    ? "bg-hv-blue text-white rounded-br-sm whitespace-pre-wrap"
+                    : "bg-white border border-hv-border text-hv-navy rounded-bl-sm prose prose-sm prose-neutral max-w-none"
                 }`}
               >
-                {msg.content}
+                {msg.role === "assistant" ? (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                ) : (
+                  msg.content
+                )}
                 {msg.role === "assistant" && streaming && i === messages.length - 1 && msg.content === "" && (
                   <span className="inline-flex gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-hv-slate animate-bounce" style={{ animationDelay: "0ms" }} />
@@ -303,7 +309,18 @@ export default function Chat() {
             Send
           </button>
         </div>
-        <p className="text-center text-xs text-hv-slate mt-2">Press Enter to send · Shift+Enter for new line</p>
+        <div className="flex items-center justify-center gap-3 mt-2">
+          <p className="text-xs text-hv-slate">Press Enter to send · Shift+Enter for new line</p>
+          {!done && (
+            <button
+              onClick={() => navigate("/confirmation")}
+              disabled={streaming}
+              className="text-xs text-hv-slate hover:text-hv-coral transition underline underline-offset-2 disabled:opacity-40"
+            >
+              Skip to schedule a meeting
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

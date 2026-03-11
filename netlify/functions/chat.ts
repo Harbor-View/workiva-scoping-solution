@@ -21,11 +21,16 @@ export const handler: Handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid request body" }) };
   }
 
+  // Claude API requires at least one message with role "user"
+  const apiMessages = messages.length === 0
+    ? [{ role: "user" as const, content: "Hi, I'd like to get a Workiva implementation estimate." }]
+    : messages;
+
   const response = await anthropic.messages.create({
     model: "claude-sonnet-4-6",
     max_tokens: 1024,
     system: SYSTEM_PROMPT,
-    messages,
+    messages: apiMessages,
   });
 
   const text = response.content
