@@ -15,7 +15,7 @@ export default function Admin() {
   const navigate = useNavigate();
 
   // Auth state
-  const [authed, setAuthed] = useState(() => sessionStorage.getItem("hv_admin") === "1");
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem("hv_admin") === "1" && !!sessionStorage.getItem("hv_admin_token"));
   const [email, setEmail] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -206,7 +206,7 @@ export default function Admin() {
 
     sessionStorage.setItem(
       "hv_lead",
-      JSON.stringify({ leadId: `test-${Date.now()}`, email: em })
+      JSON.stringify({ leadId: `test-${Date.now()}`, email: em, sessionToken: adminToken })
     );
     navigate(targetPage);
   }
@@ -424,9 +424,12 @@ export default function Admin() {
             ))}
           </div>
 
+          {!adminToken && (
+            <p className="text-red-400 text-xs mb-3">No session token — log out and re-authenticate to use protected endpoints.</p>
+          )}
           <button
             onClick={() => { void handleSimulateCompletion(); }}
-            disabled={simLoading || !simCompany.trim() || simServices.length === 0}
+            disabled={simLoading || !simCompany.trim() || simServices.length === 0 || !adminToken}
             className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-gray-950 text-sm font-semibold py-3 rounded-xl transition"
           >
             {simLoading ? "Running..." : "Fire complete-chat"}
