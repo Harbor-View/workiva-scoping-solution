@@ -17,21 +17,6 @@ interface LeadSession {
 
 const SCOPING_COMPLETE_RE = /<SCOPING_COMPLETE>([\s\S]*?)<\/SCOPING_COMPLETE>/;
 
-const PROSPECT_QUICK_REPLIES = [
-  "SEC / Financial Reporting",
-  "SOX Compliance",
-  "Sustainability Reporting",
-  "Management Reporting",
-  "Not sure yet",
-];
-
-const SELLER_QUICK_REPLIES = [
-  "New logo — net-new customer",
-  "Expansion — existing customer",
-  "Let me paste my Salesforce notes",
-  "Health check for a current customer",
-];
-
 const STEPS = ["Verify Email", "Scoping Chat", "Your Estimate"] as const;
 
 function stripScopingTag(text: string): string {
@@ -48,16 +33,9 @@ export default function Chat() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const hasUserReplied = messages.some((m) => m.role === "user");
   const firstAssistantReady = messages.some((m) => m.role === "assistant" && m.content !== "");
   const currentStep = done ? 2 : 1;
   const isWorkivaSeller = lead?.email?.endsWith("@workiva.com") ?? false;
-  const quickReplies = isWorkivaSeller ? SELLER_QUICK_REPLIES : PROSPECT_QUICK_REPLIES;
-
-  function handleQuickReply(text: string) {
-    setInput(text);
-    textareaRef.current?.focus();
-  }
 
   function handleSkip() {
     const nonEmptyMessages = messages.filter((m) => m.content !== "");
@@ -308,25 +286,7 @@ export default function Chat() {
 
       {/* Input */}
       <div className="bg-white border-t border-hv-border px-4 py-4">
-        {/* Quick Reply Chips — shown after first assistant message, before user has replied */}
-        {firstAssistantReady && !hasUserReplied && !done && (
-          <div className="max-w-2xl mx-auto mb-3">
-            <p className="text-[11px] text-hv-slate mb-1.5">Quick replies:</p>
-            <div className="flex flex-wrap gap-2">
-              {quickReplies.map((reply) => (
-                <button
-                  key={reply}
-                  onClick={() => handleQuickReply(reply)}
-                  disabled={streaming}
-                  className="text-xs px-3 py-1.5 rounded-full border border-hv-blue/30 text-hv-blue hover:bg-hv-blue hover:text-white transition disabled:opacity-40"
-                >
-                  {reply}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        <div className="max-w-2xl mx-auto flex gap-3 items-end">
+<div className="max-w-2xl mx-auto flex gap-3 items-end">
           <textarea
             ref={textareaRef}
             value={input}

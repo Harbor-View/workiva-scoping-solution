@@ -260,6 +260,54 @@ export const handler: Handler = async (event) => {
 
   // TODO Phase 4: generate and commit proposal to GitHub
 
+  // Archive completed lead data and clean up live tables
+  try {
+    // Move lead to archive
+    const { data: leadRow } = await supabase
+      .from("leads")
+      .select("*")
+      .eq("id", leadId)
+      .single();
+
+    if (leadRow) {
+      await supabase.schema("archive").from("leads").insert({
+        id: leadRow.id,
+        email: leadRow.email,
+        company_name: leadRow.company_name,
+        status: leadRow.status,
+        created_at: leadRow.created_at,
+      });
+      await supabase.from("leads").delete().eq("id", leadId);
+    }
+
+    // Move chat session(s) to archive
+    const { data: sessions } = await supabase
+      .from("chat_sessions")
+      .select("*")
+      .eq("lead_id", leadId);
+
+    if (sessions?.length) {
+      await supabase.schema("archive").from("chat_sessions").insert(
+        sessions.map((s: Record<string, unknown>) => ({
+          id: s.id,
+          lead_id: s.lead_id,
+          transcript: s.transcript,
+          payload: s.payload,
+          proposal_slug: s.proposal_slug,
+          created_at: s.created_at,
+        }))
+      );
+      await supabase.from("chat_sessions").delete().eq("lead_id", leadId);
+    }
+
+    // Clean up session tokens and OTP tokens for this lead
+    await supabase.from("session_tokens").delete().eq("lead_id", leadId);
+    await supabase.from("otp_tokens").delete().eq("email", lead?.email ?? "");
+  } catch (archiveErr) {
+    // Non-fatal — log but don't fail the response
+    console.error("Archive error (non-fatal):", archiveErr);
+  }
+
   return {
     statusCode: 200,
     body: JSON.stringify({ success: true }),
