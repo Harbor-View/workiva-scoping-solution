@@ -1,6 +1,7 @@
 import type { Handler } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import { researchCompany, upsertHubSpotCompany } from "./lib/research-company";
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -54,7 +55,10 @@ export const handler: Handler = async (event) => {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "")}-workiva`;
 
-  const proposalUrl = `https://proposal.harborview-consulting.com/${proposalSlug}`;
+  // Generate password matching proposal system convention: {companyname}2026
+  const proposalPassword = `${payload.company_name.toLowerCase().replace(/[^a-z0-9]/g, "")}2026`;
+
+  const proposalUrl = `https://proposals.harborview-consulting.com/${proposalSlug}`;
 
   // Fetch lead email
   const { data: lead } = await supabase
@@ -80,6 +84,27 @@ export const handler: Handler = async (event) => {
   if (sessionError) {
     console.error("Session save error:", sessionError);
     return { statusCode: 500, body: JSON.stringify({ error: "Failed to save session" }) };
+  }
+
+  // Research company and upsert to HubSpot (non-blocking — don't fail the whole flow)
+  let companyResearch = "";
+  try {
+    const research = await researchCompany(payload.company_name, payload.industry);
+    const hubspotId = await upsertHubSpotCompany(research);
+
+    const parts: string[] = [];
+    if (research.description) parts.push(research.description);
+    if (research.city && research.state) parts.push(`HQ: ${research.city}, ${research.state}${research.country && research.country !== "United States" ? `, ${research.country}` : ""}`);
+    if (research.numberofemployees) parts.push(`~${Number(research.numberofemployees).toLocaleString()} employees`);
+    if (research.annualrevenue) parts.push(`~$${(Number(research.annualrevenue) / 1_000_000).toFixed(0)}M revenue`);
+    if (research.website) parts.push(research.website);
+    companyResearch = parts.join(" · ");
+
+    if (hubspotId) {
+      console.log(`HubSpot company upserted: ${hubspotId}`);
+    }
+  } catch (err) {
+    console.error("Company research/HubSpot error (non-fatal):", err);
   }
 
   // Send HV notification email
@@ -117,7 +142,8 @@ export const handler: Handler = async (event) => {
 <div class="card">
   <div class="badge">New Scoping Lead</div>
   <h1>${payload.company_name}</h1>
-  <p style="color:#686B70; margin: 0 0 24px;">${payload.industry}</p>
+  <p style="color:#686B70; margin: 0 0 ${companyResearch ? "12px" : "24px"};">${payload.industry}</p>
+  ${companyResearch ? `<div style="background:#F0F7FF; border-radius:8px; padding:12px 16px; margin-bottom:24px; font-size:12px; color:#002A4E; line-height:1.6;"><strong style="display:block; margin-bottom:4px; font-size:11px; color:#079FE0; text-transform:uppercase; letter-spacing:0.5px;">Company Intel</strong>${companyResearch}</div>` : ""}
 
   <div class="fee">${payload.fee_range}</div>
 
@@ -129,6 +155,12 @@ export const handler: Handler = async (event) => {
   <div class="notes" style="margin-top: 24px;">
     <strong style="color:#002A4E; display:block; margin-bottom:6px;">Rationale</strong>
     ${payload.complexity_notes}
+  </div>
+
+  <div style="background: #002A4E; border-radius: 8px; padding: 16px; margin-bottom: 24px; color: white;">
+    <strong style="display:block; margin-bottom:8px; font-size: 13px;">Proposal Credentials</strong>
+    <div style="font-size: 13px; margin-bottom: 4px;">URL: <a href="${proposalUrl}" style="color: #079FE0;">${proposalUrl}</a></div>
+    <div style="font-size: 13px;">Password: <code style="background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 4px; font-family: monospace;">${proposalPassword}</code></div>
   </div>
 
   <a href="${proposalUrl}" class="btn">Review &amp; Edit Proposal →</a>
@@ -152,6 +184,6 @@ export const handler: Handler = async (event) => {
 
   return {
     statusCode: 200,
-    body: JSON.stringify({ proposalSlug }),
+    body: JSON.stringify({ proposalSlug, proposalPassword }),
   };
 };

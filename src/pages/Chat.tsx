@@ -46,8 +46,19 @@ export default function Chat() {
 
   function handleQuickReply(text: string) {
     setInput(text);
-    // Focus the textarea so user can edit or just hit enter
     textareaRef.current?.focus();
+  }
+
+  function handleSkip() {
+    const nonEmptyMessages = messages.filter((m) => m.content !== "");
+    if (nonEmptyMessages.length > 0 && lead) {
+      void fetch("/.netlify/functions/send-transcript", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript: nonEmptyMessages, prospectEmail: lead.email, skipped: true }),
+      });
+    }
+    navigate("/confirmation");
   }
 
   // Auth guard
@@ -113,6 +124,14 @@ export default function Chat() {
         });
         const { proposalSlug } = await completeRes.json() as { proposalSlug: string };
         sessionStorage.setItem("hv_proposal_slug", proposalSlug);
+
+        // Send transcript PDF in the background
+        void fetch("/.netlify/functions/send-transcript", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ transcript: finalMessages, prospectEmail: lead?.email, skipped: false }),
+        });
+
         setTimeout(() => navigate("/confirmation"), 1500);
       }
     } finally {
@@ -313,7 +332,7 @@ export default function Chat() {
           <p className="text-xs text-hv-slate">Press Enter to send · Shift+Enter for new line</p>
           {!done && (
             <button
-              onClick={() => navigate("/confirmation")}
+              onClick={handleSkip}
               disabled={streaming}
               className="text-xs text-hv-slate hover:text-hv-coral transition underline underline-offset-2 disabled:opacity-40"
             >
