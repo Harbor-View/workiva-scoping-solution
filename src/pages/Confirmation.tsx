@@ -193,7 +193,7 @@ export default function Confirmation() {
                   <div className="bg-white rounded-2xl shadow-sm border border-hv-border p-6 text-center">
                     <p className="text-sm font-semibold text-hv-navy mb-3">Stay connected</p>
                     <a
-                      href="https://www.linkedin.com/company/harbor-view-consulting/"
+                      href="https://www.linkedin.com/company/harborviewconsulting/"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 text-sm font-semibold text-[#0A66C2] hover:text-[#004182] transition"
