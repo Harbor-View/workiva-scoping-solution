@@ -1,6 +1,6 @@
 import type { Handler } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
-import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import { Resend } from "resend";
 import { researchCompany, type CompanyResearch } from "./lib/research-company";
 import { validateSession } from "./lib/auth";
 import { esc, escUrl, sanitizeSubject } from "./lib/html-escape";
@@ -10,13 +10,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const ses = new SESClient({
-  region: process.env.SES_REGION ?? "us-east-1",
-  credentials: {
-    accessKeyId: process.env.SES_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.SES_SECRET_ACCESS_KEY!,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
 interface Message {
   role: "user" | "assistant";
@@ -129,17 +123,11 @@ export const handler: Handler = async (event) => {
   } : null;
 
   // Send HV notification email
-  await ses.send(
-    new SendEmailCommand({
-      Source: process.env.AWS_SES_FROM_ADDRESS!,
-      Destination: { ToAddresses: process.env.HV_NOTIFICATION_EMAIL!.split(",").map((e) => e.trim()) },
-      Message: {
-        Subject: {
-          Data: sanitizeSubject(`New Workiva scoping: ${payload.company_name} — ${payload.fee_range}`),
-        },
-        Body: {
-          Html: {
-            Data: `
+  await resend.emails.send({
+    from: process.env.RESEND_FROM_ADDRESS!,
+    to: process.env.HV_NOTIFICATION_EMAIL!.split(",").map((e) => e.trim()),
+    subject: sanitizeSubject(`New Workiva scoping: ${payload.company_name} — ${payload.fee_range}`),
+    html: `
 <!DOCTYPE html>
 <html>
 <head>
@@ -252,11 +240,7 @@ export const handler: Handler = async (event) => {
 </body>
 </html>
             `,
-          },
-        },
-      },
-    })
-  );
+  });
 
   // TODO Phase 4: generate and commit proposal to GitHub
 
