@@ -8,16 +8,22 @@ Workiva Scoping Solution for Harbor View Consulting — an AI-powered chat that 
 
 ## Commands
 
-- `npm run dev` — Start Vite dev server (frontend only; functions need `netlify dev`)
-- `npm run build` — TypeScript check + Vite production build
-- `npm run lint` — ESLint
-- `netlify dev` — Full local dev with Netlify Functions
+- `netlify dev` — Full local dev (Vite + Netlify Functions together). This is the primary dev command.
+- `npm run dev` — Start Vite dev server only (frontend; no functions)
+- `npm run build` — TypeScript check (`tsc -b`) + Vite production build
+- `npm run lint` — ESLint (no config file at project root; uses flat config defaults from `typescript-eslint`)
+- `npm run preview` — Preview production build locally
+- No test suite is configured.
 
 ## Architecture
 
-**Frontend:** React 19 + Vite + Tailwind CSS + TypeScript. SPA with react-router-dom.
+**Frontend:** React 19 + Vite + Tailwind CSS + TypeScript. SPA with react-router-dom. Import alias `@/*` maps to `./src/*`.
 
 **Routes:** `/` (Landing) → `/verify` (OTP email gate) → `/chat` (AI scoping) → `/confirmation` (meeting scheduling / skip landing). `/admin` is an OTP-secured test console for HVC staff.
+
+**Deployment:** Netlify. Node 20. Functions bundled with esbuild. SPA catch-all redirect (`/* → /index.html`). Config in `netlify.toml`.
+
+**TypeScript:** Split config — `tsconfig.app.json` covers `src/` (frontend), `tsconfig.node.json` covers `vite.config.ts` only. Netlify Functions in `netlify/functions/` are bundled by esbuild at deploy time but not included in either tsconfig `include` — they still get type-checking via `strict: true` in the IDE but are not part of `tsc -b`.
 
 **Backend:** Netlify Functions (serverless, esbuild-bundled) in `netlify/functions/`.
 
