@@ -222,8 +222,8 @@ export default function Chat() {
 
       {/* Workiva seller confidentiality reminder */}
       {isWorkivaSeller && (
-        <div className="bg-hv-yellow/15 border-b border-hv-yellow/40 px-4 py-2.5">
-          <p className="max-w-2xl mx-auto text-xs text-hv-navy/70 text-center">
+        <div className="bg-hv-yellow/20 border-b border-hv-yellow/40 px-4 py-2.5">
+          <p className="max-w-2xl mx-auto text-xs text-hv-navy text-center opacity-70">
             <Shield className="w-3 h-3 inline-block mr-1 -mt-px" />
             Please comply with any confidentiality requirements related to customer information.
           </p>
