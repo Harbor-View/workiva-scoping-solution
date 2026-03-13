@@ -1,6 +1,6 @@
 import type { Handler } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
-import { SESClient, SendRawEmailCommand } from "@aws-sdk/client-ses";
+import { Resend } from "resend";
 import PDFDocument from "pdfkit";
 import { validateSession } from "./lib/auth";
 import { esc } from "./lib/html-escape";
@@ -10,13 +10,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const ses = new SESClient({
-  region: process.env.SES_REGION ?? "us-east-1",
-  credentials: {
-    accessKeyId: process.env.SES_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.SES_SECRET_ACCESS_KEY!,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
 interface Message {
   role: "user" | "assistant";
@@ -98,34 +92,6 @@ function generatePdf(transcript: Message[], prospectEmail: string): Promise<Buff
   });
 }
 
-function buildRawEmail(from: string, to: string, subject: string, htmlBody: string, pdfBuffer: Buffer, pdfFilename: string): string {
-  const boundary = `----=_Part_${Date.now()}`;
-  const pdfBase64 = pdfBuffer.toString("base64");
-
-  return [
-    `From: ${from}`,
-    `To: ${to}`,
-    `Subject: ${subject}`,
-    `MIME-Version: 1.0`,
-    `Content-Type: multipart/mixed; boundary="${boundary}"`,
-    ``,
-    `--${boundary}`,
-    `Content-Type: text/html; charset=utf-8`,
-    `Content-Transfer-Encoding: 7bit`,
-    ``,
-    htmlBody,
-    ``,
-    `--${boundary}`,
-    `Content-Type: application/pdf; name="${pdfFilename}"`,
-    `Content-Transfer-Encoding: base64`,
-    `Content-Disposition: attachment; filename="${pdfFilename}"`,
-    ``,
-    pdfBase64,
-    ``,
-    `--${boundary}--`,
-  ].join("\r\n");
-}
-
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
@@ -186,15 +152,18 @@ export const handler: Handler = async (event) => {
 </body>
 </html>`;
 
-  const fromAddress = process.env.AWS_SES_FROM_ADDRESS!;
-  const toAddress = process.env.HV_NOTIFICATION_EMAIL!.split(",").map((e) => e.trim()).join(", ");
-  const rawEmail = buildRawEmail(fromAddress, toAddress, subject, htmlBody, pdfBuffer, pdfFilename);
-
-  await ses.send(
-    new SendRawEmailCommand({
-      RawMessage: { Data: new TextEncoder().encode(rawEmail) },
-    })
-  );
+  await resend.emails.send({
+    from: process.env.RESEND_FROM_ADDRESS!,
+    to: process.env.HV_NOTIFICATION_EMAIL!.split(",").map((e) => e.trim()),
+    subject,
+    html: htmlBody,
+    attachments: [
+      {
+        filename: pdfFilename,
+        content: pdfBuffer,
+      },
+    ],
+  });
 
   return {
     statusCode: 200,

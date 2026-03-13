@@ -1,7 +1,7 @@
 import type { Handler } from "@netlify/functions";
 import { randomInt } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
-import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import { Resend } from "resend";
 import { BLOCKED_DOMAINS } from "../../src/lib/blocked-domains";
 import { checkRateLimit } from "./lib/rate-limit";
 
@@ -10,13 +10,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const ses = new SESClient({
-  region: process.env.SES_REGION ?? "us-east-1",
-  credentials: {
-    accessKeyId: process.env.SES_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.SES_SECRET_ACCESS_KEY!,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") {
@@ -70,31 +64,23 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    await ses.send(
-      new SendEmailCommand({
-        Source: process.env.AWS_SES_FROM_ADDRESS!,
-        Destination: { ToAddresses: [email] },
-        Message: {
-          Subject: { Data: "Your Harbor View verification code" },
-          Body: {
-            Html: {
-              Data: `
-                <div style="font-family: Lato, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
-                  <h2 style="color: #002A4E; margin-bottom: 8px;">Your verification code</h2>
-                  <p style="color: #686B70; margin-bottom: 24px;">Enter this code to continue your Workiva scoping session.</p>
-                  <div style="background: #F8F9FA; border-radius: 8px; padding: 24px; text-align: center; margin-bottom: 24px;">
-                    <span style="font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #002A4E;">${code}</span>
-                  </div>
-                  <p style="color: #686B70; font-size: 14px;">This code expires in 10 minutes. If you didn't request this, you can ignore this email.</p>
-                </div>
-              `,
-            },
-          },
-        },
-      })
-    );
-  } catch (sesError) {
-    console.error("SES send error:", sesError);
+    await resend.emails.send({
+      from: process.env.RESEND_FROM_ADDRESS!,
+      to: [email],
+      subject: "Your Harbor View verification code",
+      html: `
+        <div style="font-family: Lato, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+          <h2 style="color: #002A4E; margin-bottom: 8px;">Your verification code</h2>
+          <p style="color: #686B70; margin-bottom: 24px;">Enter this code to continue your Workiva scoping session.</p>
+          <div style="background: #F8F9FA; border-radius: 8px; padding: 24px; text-align: center; margin-bottom: 24px;">
+            <span style="font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #002A4E;">${code}</span>
+          </div>
+          <p style="color: #686B70; font-size: 14px;">This code expires in 10 minutes. If you didn't request this, you can ignore this email.</p>
+        </div>
+      `,
+    });
+  } catch (emailError) {
+    console.error("Email send error:", emailError);
     return { statusCode: 500, body: JSON.stringify({ error: "Failed to send verification email" }) };
   }
 

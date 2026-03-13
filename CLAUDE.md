@@ -23,11 +23,11 @@ Workiva Scoping Solution for Harbor View Consulting — an AI-powered chat that 
 
 | Function | Purpose |
 |---|---|
-| `send-otp` | Generate 6-digit OTP (crypto.randomInt), store in Supabase `otp_tokens`, email via SES. Rate limited: 5/email/hr. |
+| `send-otp` | Generate 6-digit OTP (crypto.randomInt), store in Supabase `otp_tokens`, email via Resend. Rate limited: 5/email/hr. |
 | `verify-otp` | Validate OTP, issue session token (stored in `session_tokens`), upsert lead. Rate limited: 5 attempts/10min with OTP lockout. |
 | `chat` | Proxy to Claude API with system prompt selection (prospect vs seller). Requires Bearer token. Server-side `isWorkivaSeller` detection. |
 | `complete-chat` | Save session, research company (cached in `company_research`), email HVC with scoping summary + full transcript. Requires Bearer token. |
-| `send-transcript` | Generate branded PDF (PDFKit), send as SES attachment. Requires Bearer token. |
+| `send-transcript` | Generate branded PDF (PDFKit), send as Resend attachment. Requires Bearer token. |
 
 **Shared libraries** (`netlify/functions/lib/`):
 - `auth.ts` — `validateSession()` extracts Bearer token, validates against `session_tokens` table
@@ -37,7 +37,7 @@ Workiva Scoping Solution for Harbor View Consulting — an AI-powered chat that 
 - `pricing-config.json` — Editable fee ranges, bundle rules, and adjustment dimensions (org size, migration complexity, integrations, resources, timeline, regulatory, scope volume, confidence-based range width)
 - `research-company.ts` — Claude-powered company research with Supabase cache
 
-**Key libraries:** `@anthropic-ai/sdk` (Claude), `@supabase/supabase-js`, `@aws-sdk/client-ses`, `pdfkit`, `react-markdown` + `remark-gfm`.
+**Key libraries:** `@anthropic-ai/sdk` (Claude), `@supabase/supabase-js`, `resend`, `pdfkit`, `react-markdown` + `remark-gfm`.
 
 ## Key Patterns
 
@@ -60,7 +60,7 @@ Frontend (VITE_ prefix): none currently required.
 Backend (Netlify env / `.env`):
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
 - `CLAUDE_API_KEY`
-- `SES_REGION`, `SES_ACCESS_KEY_ID`, `SES_SECRET_ACCESS_KEY`, `AWS_SES_FROM_ADDRESS`
+- `RESEND_API_KEY`, `RESEND_FROM_ADDRESS`
 - `HV_NOTIFICATION_EMAIL` — comma-separated for multiple recipients
 
 ## Supabase Tables
