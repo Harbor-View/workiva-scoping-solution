@@ -220,6 +220,15 @@ export default function Chat() {
         </div>
       </div>
 
+      {/* Workiva seller confidentiality reminder */}
+      {isWorkivaSeller && (
+        <div className="bg-hv-yellow/10 border-b border-hv-yellow/30 px-4 py-2">
+          <p className="max-w-2xl mx-auto text-xs text-hv-slate text-center">
+            Please comply with any confidentiality requirements related to customer information.
+          </p>
+        </div>
+      )}
+
       {/* Messages */}
       <main className="flex-1 overflow-y-auto px-4 py-6">
         <div className="max-w-2xl mx-auto space-y-4">
