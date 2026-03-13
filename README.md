@@ -7,12 +7,12 @@ AI-powered scoping tool for [Harbor View Consulting](https://harborview-consulti
 ## How It Works
 
 1. **Prospect lands** on the site and enters their corporate email (300+ consumer/competitor domains blocked)
-2. **OTP verification** — Cryptographically secure 6-digit code sent via AWS SES, rate limited (5/hr per email)
+2. **OTP verification** — Cryptographically secure 6-digit code sent via Resend, rate limited (5/hr per email)
 3. **Session issued** — On OTP success, a session token (2-hour expiry) is issued and used for all subsequent API calls
 4. **AI scoping chat** — Claude guides the prospect (or Workiva seller) through 8–12 adaptive questions about reporting needs, team size, timeline, and Workiva modules
 5. **Estimate generated** — Claude applies a structured pricing adjustment framework (8 dimensions including org size, migration complexity, integrations, timeline pressure, regulatory overlay) to produce a defensible fee range with confidence-based width
 6. **HVC notified** — Email with AI-generated company research, scoping summary, fee range, and the full chat transcript
-7. **Transcript PDF** — Branded PDF generated via PDFKit and sent as an SES attachment
+7. **Transcript PDF** — Branded PDF generated via PDFKit and sent as a Resend attachment
 8. **Prospect confirmation** — Meeting scheduling via HubSpot embed, contact info for the HVC team. Prospects who skip the chat see a tailored screen prompting them to return or reach out directly
 
 ### Workiva Seller Flow
@@ -27,7 +27,7 @@ Users with `@workiva.com` emails get a tailored experience focused on deal stage
 | Hosting | Netlify (static site + serverless functions) |
 | AI | Claude API (`claude-sonnet-4-6`) via `@anthropic-ai/sdk` |
 | Database | Supabase (PostgreSQL) — `leads`, `otp_tokens`, `chat_sessions`, `session_tokens`, `rate_limits`, `company_research` |
-| Email | AWS SES — OTP codes, notifications, PDF transcripts |
+| Email | Resend — OTP codes, notifications, PDF transcripts |
 | PDF | PDFKit (server-side generation) |
 | Security | Session token auth, rate limiting, HTML escaping, CSP headers |
 | Tracking | HubSpot (portal 48264605) |
@@ -43,7 +43,7 @@ Required environment variables (set in `.env` or Netlify dashboard):
 
 - `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY`
 - `CLAUDE_API_KEY`
-- `SES_REGION` / `SES_ACCESS_KEY_ID` / `SES_SECRET_ACCESS_KEY` / `AWS_SES_FROM_ADDRESS`
+- `RESEND_API_KEY` / `RESEND_FROM_ADDRESS`
 - `HV_NOTIFICATION_EMAIL`
 
 ## Project Structure
